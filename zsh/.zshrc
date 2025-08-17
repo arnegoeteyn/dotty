@@ -1,5 +1,7 @@
 # zmodload zsh/zprof
 
+alias stow="stow -d ~/Documents/dotty -t ~"
+
 # Created by Zap installer
 [ -f "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh" ] && source "${XDG_DATA_HOME:-$HOME/.local/share}/zap/zap.zsh"
 
