@@ -40,6 +40,7 @@ return {
       -- lint.linters_by_ft['ruby'] = nil
       -- lint.linters_by_ft['terraform'] = nil
       -- lint.linters_by_ft['text'] = nil
+      lint.linters_by_ft['typescriptreact'] = { 'eslint' }
       lint.linters_by_ft['dockerfile'] = nil
       lint.linters_by_ft['markdown'] = nil
       lint.linters_by_ft['go'] = { 'golangcilint' }
