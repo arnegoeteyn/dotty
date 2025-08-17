@@ -19,4 +19,5 @@ return {
       -- log_level = 'debug',
     },
   },
+  { 'rebelot/kanagawa.nvim' },
 }
