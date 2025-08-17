@@ -416,6 +416,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>sl', builtin.lsp_document_symbols, { desc = '[S]earch [L]SP document symbols' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -1019,3 +1020,4 @@ vim.api.nvim_create_autocmd('BufWritePre', {
     end)
   end,
 })
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open [e]rror in floating window' })
