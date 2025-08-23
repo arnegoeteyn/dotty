@@ -9,7 +9,7 @@ vim.o.foldenable = true
 
 return {
   'kevinhwang91/nvim-ufo',
-  lazy = false,
+  event = 'VeryLazy',
   dependencies = 'kevinhwang91/promise-async',
   opts = {
     provider_selector = function(bufnr, filetype, buftype)
