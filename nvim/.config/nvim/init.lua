@@ -197,6 +197,8 @@ vim.api.nvim_create_autocmd('BufWritePre', {
 
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Open [e]rror in floating window' })
 
+vim.keymap.set('n', '<leader>o', ':b#<CR>', { noremap = true })
+
 vim.api.nvim_set_keymap('n', 'j', "v:count ? 'j' : 'gj'", { noremap = true, expr = true })
 vim.api.nvim_set_keymap('n', 'k', "v:count ? 'k' : 'gk'", { noremap = true, expr = true })
 
