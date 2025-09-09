@@ -1,0 +1,7 @@
+theme = "kanagawa"
+
+[keys.normal]
+C-space = "signature_help"
+
+[keys.insert]
+"C-["= "normal_mode"

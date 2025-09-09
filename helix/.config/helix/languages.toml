@@ -1,0 +1,4 @@
+[[language]]
+name = "typescript"
+formatter = {command = "prettierd", arsgs = ["--parser", "typescript"]}
+auto-format = true
