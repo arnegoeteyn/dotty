@@ -24,9 +24,12 @@ alias lla='ls -la'
 alias lt='ls --tree'
 
 alias vim=nvim
+alias h='hx .'
+
+alias y='yazi'
 
 
-export EDITOR=nvim
+export EDITOR=hx
 
 
 export GOPATH=$HOME/go
