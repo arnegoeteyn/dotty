@@ -2,3 +2,14 @@
 name = "typescript"
 formatter = {command = "prettierd", arsgs = ["--parser", "typescript"]}
 auto-format = true
+
+[[language]]
+name = "yaml"
+file-types = ["yaml", "yml"]
+formatter = {command = "prettier", args = ["--parser", "yaml"]}
+auto-format = true
+
+[language-server.golangci-lint-lsp.config]
+command = ["golangci-lint", "run", "--out-format", "json", "--issues-exit-code=1"]
+
+
