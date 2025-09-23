@@ -40,6 +40,8 @@ config.keys = {
 
 	{ key = "/", mods = "CMD", action = act.QuickSelect},
 
+	{ key = 'Enter', mods = 'ALT', action = wezterm.action.DisableDefaultAssignment },
+
 	{ key = "d", mods = "CMD", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
 	{ key = "d", mods = "SHIFT|CMD", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
 	{ key = "h", mods = "CMD", action = act.ActivatePaneDirection("Left") },
