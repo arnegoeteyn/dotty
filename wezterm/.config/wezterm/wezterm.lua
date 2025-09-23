@@ -23,8 +23,8 @@ config.window_padding = {
 }
 
 config.inactive_pane_hsb = {
-  saturation = 0.3,
-  brightness = 0.4,
+	saturation = 0.3,
+	brightness = 0.4,
 }
 
 config.native_macos_fullscreen_mode = true
@@ -37,6 +37,8 @@ config.keys = {
 	{ key = ";", mods = "CMD", action = projects.choose_project() },
 
 	{ key = "Enter", mods = "CMD", action = act.TogglePaneZoomState },
+
+	{ key = "/", mods = "CMD", action = act.QuickSelect},
 
 	{ key = "d", mods = "CMD", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
 	{ key = "d", mods = "SHIFT|CMD", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
