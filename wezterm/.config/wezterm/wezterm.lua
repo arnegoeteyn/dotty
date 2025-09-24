@@ -2,6 +2,7 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local projects = require("projects")
 local appearance = require("appearance")
+local killworkspace = require("workspace-kill")
 
 local config = wezterm.config_builder()
 
@@ -12,7 +13,7 @@ config.font_size = 18
 if appearance.is_dark() then
 	config.color_scheme = "Tokyo Night"
 else
-	config.color_scheme = "Tokyo Night Day"
+	config.color_scheme = "Tokyo Night"
 end
 
 config.window_padding = {
@@ -48,7 +49,24 @@ config.keys = {
 	{ key = "l", mods = "CMD", action = act.ActivatePaneDirection("Right") },
 	{ key = "j", mods = "CMD", action = act.ActivatePaneDirection("Down") },
 	{ key = "k", mods = "CMD", action = act.ActivatePaneDirection("Up") },
+
 }
+
+wezterm.on('augment-command-palette', function(window, pane)
+  return {
+    {
+      brief = 'Kill workspace',
+      icon = 'md_skull',
+
+      action = wezterm.action_callback(function(currentwindow, _, _)
+				local w = currentwindow:active_workspace()
+      	killworkspace.kill_workspace(w)
+    	end
+      )
+      ,
+    },
+  }
+end)
 
 wezterm.on("gui-startup", function(cmd)
 	local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
