@@ -12,4 +12,12 @@ auto-format = true
 [language-server.golangci-lint-lsp.config]
 command = ["golangci-lint", "run", "--out-format", "json", "--issues-exit-code=1"]
 
+[language-server.gopls]
+command = "gopls"
 
+[language-server.gopls.config]
+"build.buildFlags" = ["-tags=test"]
+
+[[language]]
+name = "lua"
+formatter = { command = "stylua", args = [ "-" ] }
