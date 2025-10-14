@@ -1,4 +1,5 @@
 theme = "kanagawa"
+# theme = "material_palenight"
 
 [keys.normal]
 C-h = "jump_view_left"
@@ -26,6 +27,7 @@ b = ":sh git blame -L %{cursor_line},%{cursor_line} %{buffer_name}"
 r = ":reset-diff-change"
 c = ["collapse_selection", "kill_to_line_end", "insert_mode"]
 d = ["collapse_selection", "kill_to_line_end"]
+s = "@mi(S,<ret><A-;>i<ret><esc>f);i,<ret><esc>"
 
 [keys.insert]
 "C-["= "normal_mode"
