@@ -123,4 +123,8 @@ wezterm.on("update-status", function(window, _)
 	window:set_right_status(wezterm.format(elements))
 end)
 
+config.window_frame = {
+	font_size = 15.0,
+}
+
 return config
