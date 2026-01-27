@@ -24,7 +24,7 @@ A-d = "scroll_down"
 [keys.normal.m.n]
 "{" = "@f{mi{"
 "(" = "@f(mi("
-"\"" = "@f\"mi\""
+"\"" = "@f\"lmi\""
 "'" = "@f'mi'"
 
 [keys.normal.m.N]
@@ -32,6 +32,10 @@ A-d = "scroll_down"
 "(" = "@F(mi("
 "\"" = "@F\"mi\""
 "'" = "@F'mi'"
+
+[keys.normal.space]
+e = "file_explorer_in_current_buffer_directory"
+E = "file_explorer"
 
 [keys.normal.space.space]
 b = ":sh git blame -L %{cursor_line},%{cursor_line} %{buffer_name}"
