@@ -46,6 +46,9 @@ s = "@mi(S,<ret><A-;>i<ret><esc>(,<A-;>a,<ret><esc>"
 n = ":noop %sh{echo '%{buffer_name}' | pbcopy}"
 N = ":noop %sh{echo '%{buffer_name}:%{cursor_line}' | pbcopy}"
 
+g = ":sh echo $(gh repo view --json url --jq '.url')/blob/$(git rev-parse HEAD)/'%{buffer_name}' | pbcopy"
+G = ":sh echo $(gh repo view --json url --jq '.url')/blob/$(git rev-parse HEAD)/'%{buffer_name}'#L'%{selection_line_start}'-L'%{selection_line_end}'| pbcopy"
+
 [keys.insert]
 "C-["= "normal_mode"
 
