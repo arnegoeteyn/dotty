@@ -43,6 +43,8 @@ r = ":reset-diff-change"
 c = ["collapse_selection", "kill_to_line_end", "insert_mode"]
 d = ["collapse_selection", "kill_to_line_end"]
 s = "@mi(S,<ret><A-;>i<ret><esc>(,<A-;>a,<ret><esc>"
+n = ":noop %sh{echo '%{buffer_name}' | pbcopy}"
+N = ":noop %sh{echo '%{buffer_name}:%{cursor_line}' | pbcopy}"
 
 [keys.insert]
 "C-["= "normal_mode"
