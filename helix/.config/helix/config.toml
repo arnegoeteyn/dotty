@@ -49,6 +49,8 @@ N = ":noop %sh{echo '%{buffer_name}:%{cursor_line}' | pbcopy}"
 g = ":sh echo $(gh repo view --json url --jq '.url')/blob/$(git rev-parse HEAD)/'%{buffer_name}' | pbcopy"
 G = ":sh echo $(gh repo view --json url --jq '.url')/blob/$(git rev-parse HEAD)/'%{buffer_name}'#L'%{selection_line_start}'-L'%{selection_line_end}'| pbcopy"
 
+f = [":pipe-to golangci-lint run --enable-only wsl_v5 --fix", ":reload-all", ":lsp-restart"]
+
 [keys.insert]
 "C-["= "normal_mode"
 
