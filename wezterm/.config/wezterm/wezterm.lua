@@ -3,6 +3,7 @@ local act = wezterm.action
 local projects = require("projects")
 local appearance = require("appearance")
 local killworkspace = require("workspace-kill")
+local openinhelix = require("open-helix")
 
 local config = wezterm.config_builder()
 
@@ -40,6 +41,7 @@ config.keys = {
 	{ key = "Enter", mods = "CMD", action = act.TogglePaneZoomState },
 
 	{ key = "/", mods = "CMD", action = act.QuickSelect},
+	{ key = "/", mods = "ALT|CMD", action = openinhelix.QuickSelect()},
 
 	{ key = 'Enter', mods = 'ALT', action = wezterm.action.DisableDefaultAssignment },
 
