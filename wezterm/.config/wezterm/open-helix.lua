@@ -62,8 +62,8 @@ M.filters = {}
 
 function M.QuickSelect()
 	local patterns = {
-		"[^\\s]+\\.go:\\d+",
-		"[^\\s]+\\.go:\\d+:\\d+",
+    "[^\"\\s]+\\.go:\\d+",
+    "[^\"\\s]+\\.go:\\d+:\\d+",
 	}
 
 	return act.QuickSelectArgs({
