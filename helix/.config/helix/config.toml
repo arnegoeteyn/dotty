@@ -51,6 +51,8 @@ G = ":sh echo $(gh repo view --json url --jq '.url')/blob/$(git rev-parse HEAD)/
 
 f = [":pipe-to golangci-lint run --enable-only wsl_v5 --fix", ":reload-all", ":lsp-restart"]
 
+w = [":toggle-option soft-wrap.enable"]
+
 [keys.insert]
 "C-["= "normal_mode"
 
