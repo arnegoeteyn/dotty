@@ -12,9 +12,9 @@ config.initial_rows = 28
 config.font_size = 18
 
 if appearance.is_dark() then
-	config.color_scheme = "Tokyo Night"
+	config.color_scheme = "kanagawabones"
 else
-	config.color_scheme = "Tokyo Night"
+	config.color_scheme = "kanagawabones"
 end
 
 config.window_padding = {
