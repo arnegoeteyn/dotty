@@ -54,9 +54,9 @@ function module.choose_project()
 end
 
 function dev_workspace(child_window, child_pane, cwd, label)
-	local tab, helix_pane, window = mux.spawn_window({
+	local _, helix_pane, window = mux.spawn_window({
 		workspace = label,
-		cwd = label,
+		cwd = cwd,
 	})
 
 	local lazygit_pane = helix_pane:split({
@@ -68,11 +68,23 @@ function dev_workspace(child_window, child_pane, cwd, label)
 	lazygit_pane:split({
 		direction = "Bottom",
 		size = 0.3,
-		cwd = cwd,
+		cwd = cwd .. "/main",
 	})
 
-	helix_pane:send_text("hx .\n")
-	lazygit_pane:send_text("lazygit\n")
+	helix_pane:send_text("hx main\n")
+	lazygit_pane:send_text("lazygit -p main\n")
+
+	local _, test_pane = window:spawn_tab {cwd = cwd .. "/main"}
+
+	local opencode_pane = test_pane:split({
+		direction = "Right",
+		size = 0.5,
+		cwd = cwd .. "/clanker",
+	})
+
+	opencode_pane:send_text("opencode\n")
+
+	helix_pane:activate {}
 end
 
 return module
