@@ -1,14 +1,18 @@
 local wezterm = require("wezterm")
-local module = {}
+local M = {}
+M.__index = M
 
-local mux = wezterm.mux
+M.New = function(dir)
+	return setmetatable({
+		dir = dir
+	}, M)
+end
 
-local project_dir = wezterm.home_dir .. "/Documents/nova"
 
-local function project_dirs()
+function M:project_dirs()
 	local projects = {}
 
-	for _, dir in ipairs(wezterm.glob(project_dir .. "/*")) do
+	for _, dir in ipairs(wezterm.glob(self.dir .. "/*")) do
 		table.insert(projects, { label = dir })
 	end
 
@@ -16,6 +20,8 @@ local function project_dirs()
 end
 
 local function dev_workspace(cwd, label)
+	local mux = wezterm.mux
+
 	local _, helix_pane, _ = mux.spawn_window({
 		workspace = label,
 		cwd = label,
@@ -37,16 +43,17 @@ local function dev_workspace(cwd, label)
 	lazygit_pane:send_text("lazygit\n")
 end
 
-function module.choose_project()
+function M:choose_project()
 	return wezterm.action.InputSelector({
 		title = "Projects",
-		choices = project_dirs(),
+		choices = self:project_dirs(),
 		fuzzy = true,
 		action = wezterm.action_callback(function(child_window, child_pane, _, label)
 			if not label then
 				return
 			end
 
+			local mux = wezterm.mux
 			local existing_workspaces = mux.get_workspace_names()
 			local workspace_exists = false
 			for _, name in ipairs(existing_workspaces) do
@@ -70,6 +77,4 @@ function module.choose_project()
 	})
 end
 
-
-
-return module
+return M

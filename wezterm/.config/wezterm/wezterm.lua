@@ -31,12 +31,14 @@ config.inactive_pane_hsb = {
 
 config.native_macos_fullscreen_mode = true
 
+local projectPicker = projects.New(wezterm.home_dir .. "/Documents/nova")
+
 config.keys = {
 	{ key = "9", mods = "CMD", action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 	{ key = "n", mods = "CMD", action = act.SwitchWorkspaceRelative(1) },
 	{ key = "p", mods = "CMD", action = act.SwitchWorkspaceRelative(-1) },
 
-	{ key = ";", mods = "CMD", action = projects.choose_project() },
+	{ key = ";", mods = "CMD", action = projectPicker:choose_project() },
 
 	{ key = "Enter", mods = "CMD", action = act.TogglePaneZoomState },
 
