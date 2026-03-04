@@ -1,60 +1,28 @@
 local wezterm = require("wezterm")
-local module = {}
+local M = {}
+M.__index = M
 
-local mux = wezterm.mux
+M.New = function(dir)
+	return setmetatable({
+		dir = dir
+	}, M)
+end
 
-local project_dir = wezterm.home_dir .. "/Documents/nova"
 
-local function project_dirs()
+function M:project_dirs()
 	local projects = {}
 
-	for _, dir in ipairs(wezterm.glob(project_dir .. "/*")) do
-		table.insert(projects, dir)
+	for _, dir in ipairs(wezterm.glob(self.dir .. "/*")) do
+		table.insert(projects, { label = dir })
 	end
 
 	return projects
 end
 
-function module.choose_project()
-	local choices = {}
-	for _, value in ipairs(project_dirs()) do
-		table.insert(choices, { label = value })
-	end
+local function dev_workspace(cwd, label)
+	local mux = wezterm.mux
 
-	return wezterm.action.InputSelector({
-		title = "Projects",
-		choices = choices,
-		fuzzy = true,
-		action = wezterm.action_callback(function(child_window, child_pane, id, label)
-			if not label then
-				return
-			end
-
-			local existing_workspaces = mux.get_workspace_names()
-			local workspace_exists = false
-			for _, name in ipairs(existing_workspaces) do
-				if name == label then
-					workspace_exists = true
-					break
-				end
-			end
-
-			if not workspace_exists then
-				dev_workspace(child_window, child_pane, label, label)
-			end
-
-			child_window:perform_action(
-				wezterm.action.SwitchToWorkspace({
-					name = label,
-				}),
-				child_pane
-			)
-		end),
-	})
-end
-
-function dev_workspace(child_window, child_pane, cwd, label)
-	local tab, helix_pane, window = mux.spawn_window({
+	local _, helix_pane, _ = mux.spawn_window({
 		workspace = label,
 		cwd = label,
 	})
@@ -75,4 +43,38 @@ function dev_workspace(child_window, child_pane, cwd, label)
 	lazygit_pane:send_text("lazygit\n")
 end
 
-return module
+function M:choose_project()
+	return wezterm.action.InputSelector({
+		title = "Projects",
+		choices = self:project_dirs(),
+		fuzzy = true,
+		action = wezterm.action_callback(function(child_window, child_pane, _, label)
+			if not label then
+				return
+			end
+
+			local mux = wezterm.mux
+			local existing_workspaces = mux.get_workspace_names()
+			local workspace_exists = false
+			for _, name in ipairs(existing_workspaces) do
+				if name == label then
+					workspace_exists = true
+					break
+				end
+			end
+
+			if not workspace_exists then
+				dev_workspace(label, label)
+			end
+
+			child_window:perform_action(
+				wezterm.action.SwitchToWorkspace({
+					name = label,
+				}),
+				child_pane
+			)
+		end),
+	})
+end
+
+return M
