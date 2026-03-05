@@ -1,6 +1,7 @@
 function revpr --description "Checkout a PR branch in the review worktree"
     # Parse arguments
     set -l debug 0
+    set -l mixed_reset 0
     set -l pr_number ""
 
     set -l i 1
@@ -8,12 +9,15 @@ function revpr --description "Checkout a PR branch in the review worktree"
         switch $argv[$i]
             case -d --debug
                 set debug 1
+            case -m --mixed
+                set mixed_reset 1
             case -h --help
-                echo "Usage: pr-checkout [-d|--debug] <pr-number>"
+                echo "Usage: revpr [-d|--debug] [-m|--mixed] <pr-number>"
                 echo ""
-                echo "Checks out a PR branch in the 'review' worktree and resets it to the target branch."
+                echo "Checks out a PR branch in the 'review' worktree."
                 echo ""
                 echo "Options:"
+                echo "  -m, --mixed    Perform mixed reset to merge base (unstage all PR changes)"
                 echo "  -d, --debug    Enable debug output"
                 echo "  -h, --help     Show this help"
                 return 0
@@ -28,7 +32,7 @@ function revpr --description "Checkout a PR branch in the review worktree"
     # Validate arguments
     if test -z "$pr_number"
         echo (set_color red)"Error: Must specify a PR number"(set_color normal)
-        echo "Usage: pr-checkout [-d|--debug] <pr-number>"
+        echo "Usage: revpr [-d|--debug] [-m|--mixed] <pr-number>"
         return 1
     end
 
@@ -93,10 +97,19 @@ function revpr --description "Checkout a PR branch in the review worktree"
     set -l pr_title (gh pr view "$pr_number" --json title --jq '.title' 2>&1)
     __pr_checkout_debug "PR title: $pr_title"
 
+    set -l pr_body (gh pr view "$pr_number" --json body --jq '.body' 2>&1)
+    __pr_checkout_debug "PR body: $pr_body"
+
     # Print PR info
     echo (set_color green)"PR #$pr_number: $pr_title"(set_color normal)
     echo "  Head branch: $pr_head"
     echo "  Base branch: $pr_base"
+    
+    if test -n "$pr_body" -a "$pr_body" != "null" -a "$pr_body" != ""
+        echo ""
+        echo (set_color yellow)"Description:"(set_color normal)
+        echo "$pr_body"
+    end
     echo ""
 
     # Fetch latest changes
@@ -130,42 +143,50 @@ function revpr --description "Checkout a PR branch in the review worktree"
 
     echo (set_color green)"Hard reset to: origin/$pr_head"(set_color normal)
 
-    # Find the merge base between PR branch and base branch
-    __pr_checkout_debug "Finding merge base between origin/$pr_head and origin/$pr_base..."
-    set -l merge_base (git merge-base "origin/$pr_head" "origin/$pr_base" 2>&1)
-    set -l merge_base_status $status
-    __pr_checkout_debug "Merge base result (status=$merge_base_status): $merge_base"
+    # Optionally perform mixed reset to merge base
+    if test $mixed_reset -eq 1
+        # Find the merge base between PR branch and base branch
+        __pr_checkout_debug "Finding merge base between origin/$pr_head and origin/$pr_base..."
+        set -l merge_base (git merge-base "origin/$pr_head" "origin/$pr_base" 2>&1)
+        set -l merge_base_status $status
+        __pr_checkout_debug "Merge base result (status=$merge_base_status): $merge_base"
 
-    if test $merge_base_status -ne 0 -o -z "$merge_base"
-        echo (set_color red)"Error: Failed to find merge base"(set_color normal)
-        if test $debug -eq 1
-            echo (set_color red)"[DEBUG] Output: $merge_base"(set_color normal)
+        if test $merge_base_status -ne 0 -o -z "$merge_base"
+            echo (set_color red)"Error: Failed to find merge base"(set_color normal)
+            if test $debug -eq 1
+                echo (set_color red)"[DEBUG] Output: $merge_base"(set_color normal)
+            end
+            return 1
         end
-        return 1
-    end
 
-    # Perform mixed reset to merge base
-    echo (set_color cyan)"Performing mixed reset to merge base..."(set_color normal)
-    __pr_checkout_debug "Command: git -C '$review_worktree' reset $merge_base"
+        # Perform mixed reset to merge base
+        echo (set_color cyan)"Performing mixed reset to merge base..."(set_color normal)
+        __pr_checkout_debug "Command: git -C '$review_worktree' reset $merge_base"
 
-    set -l reset_output (git -C "$review_worktree" reset "$merge_base" 2>&1)
-    set -l reset_status $status
-    __pr_checkout_debug "Reset result (status=$reset_status): $reset_output"
+        set -l reset_output (git -C "$review_worktree" reset "$merge_base" 2>&1)
+        set -l reset_status $status
+        __pr_checkout_debug "Reset result (status=$reset_status): $reset_output"
 
-    if test $reset_status -ne 0
-        echo (set_color red)"Error: Failed to reset to merge base"(set_color normal)
-        if test $debug -eq 1
-            echo (set_color red)"[DEBUG] Output: $reset_output"(set_color normal)
+        if test $reset_status -ne 0
+            echo (set_color red)"Error: Failed to reset to merge base"(set_color normal)
+            if test $debug -eq 1
+                echo (set_color red)"[DEBUG] Output: $reset_output"(set_color normal)
+            end
+            return 1
         end
-        return 1
-    end
 
-    echo ""
-    echo (set_color green)"Review worktree ready!"(set_color normal)
-    echo "  Path: $review_worktree"
-    echo "  Merge base: $merge_base"
-    echo ""
-    echo "All PR changes are now unstaged in the review worktree."
+        echo ""
+        echo (set_color green)"Review worktree ready!"(set_color normal)
+        echo "  Path: $review_worktree"
+        echo "  Merge base: $merge_base"
+        echo ""
+        echo "All PR changes are now unstaged in the review worktree."
+    else
+        echo ""
+        echo (set_color green)"Review worktree ready!"(set_color normal)
+        echo "  Path: $review_worktree"
+        echo "  Branch: origin/$pr_head"
+    end
 
     # Change to review worktree directory
     __pr_checkout_debug "Changing directory to: $review_worktree"
