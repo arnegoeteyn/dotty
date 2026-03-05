@@ -196,11 +196,9 @@ function compr --description "Show PR comments from the last commit with associa
 
     if test $found_comments -eq 0
         echo (set_color yellow)"No PR comments found in the last commit"(set_color normal)
-        functions -e __pr_debug __get_file_line __flush_pending_comment
-        return 0
+    else
+        echo (set_color green)"Found $found_comments PR comment(s)"(set_color normal)
     end
-
-    echo (set_color green)"Found $found_comments PR comment(s)"(set_color normal)
     echo ""
 
     # Prompt user to continue
@@ -251,39 +249,41 @@ function compr --description "Show PR comments from the last commit with associa
     echo (set_color green)"Started PR review, ID: $review_id"(set_color normal)
     echo ""
 
-    # Submit each comment
-    echo (set_color green)"Submitting comments..."(set_color normal)
+    # Submit each comment (if any)
+    if test $found_comments -gt 0
+        echo (set_color green)"Submitting comments..."(set_color normal)
 
-    for i in (seq (count $comment_files))
-        set -l file $comment_files[$i]
-        set -l line_num $comment_lines[$i]
-        set -l body $comment_bodies[$i]
+        for i in (seq (count $comment_files))
+            set -l file $comment_files[$i]
+            set -l line_num $comment_lines[$i]
+            set -l body $comment_bodies[$i]
 
-        echo "  Adding comment to $file:$line_num..."
-        __pr_debug "Command: gh pr-review review --add-comment --review-id '$review_id' --path '$file' --line '$line_num' --body '$body' -R '$repo_info' '$pr_number'"
+            echo "  Adding comment to $file:$line_num..."
+            __pr_debug "Command: gh pr-review review --add-comment --review-id '$review_id' --path '$file' --line '$line_num' --body '$body' -R '$repo_info' '$pr_number'"
 
-        set -l comment_output (gh pr-review review --add-comment \
-            --review-id "$review_id" \
-            --path "$file" \
-            --line "$line_num" \
-            --body "$body" \
-            -R "$repo_info" \
-            "$pr_number" 2>&1)
-        set -l comment_status $status
-        __pr_debug "Add comment result (status=$comment_status): $comment_output"
+            set -l comment_output (gh pr-review review --add-comment \
+                --review-id "$review_id" \
+                --path "$file" \
+                --line "$line_num" \
+                --body "$body" \
+                -R "$repo_info" \
+                "$pr_number" 2>&1)
+            set -l comment_status $status
+            __pr_debug "Add comment result (status=$comment_status): $comment_output"
 
-        if test $comment_status -ne 0
-            echo (set_color red)"    Failed to add comment"(set_color normal) >&2
-            if test $debug -eq 1
-                echo (set_color red)"    [DEBUG] Output: $comment_output"(set_color normal) >&2
+            if test $comment_status -ne 0
+                echo (set_color red)"    Failed to add comment"(set_color normal) >&2
+                if test $debug -eq 1
+                    echo (set_color red)"    [DEBUG] Output: $comment_output"(set_color normal) >&2
+                end
+            else
+                echo (set_color green)"    Done"(set_color normal)
             end
-        else
-            echo (set_color green)"    Done"(set_color normal)
         end
-    end
 
-    echo ""
-    echo (set_color green)"All comments added. Now submit the review."(set_color normal)
+        echo ""
+        echo (set_color green)"All comments added. Now submit the review."(set_color normal)
+    end
     echo ""
 
     # Ask user for review event type
