@@ -66,8 +66,9 @@ function compr --description "Show PR comments from the last commit with associa
         if test -z "$pending_comment"
             return
         end
-        set -l comment_body (string replace -r '^.*//\s*PR:\s*' '' -- "$pending_comment")
-        set -l target_line_num (math $pending_line_num + 1)
+        # Join multiline comment bodies with newlines
+        set -l comment_body (string join \n -- $pending_comment_body)
+        set -l target_line_num (math $pending_last_line_num + 1)
         set -l following_line (__get_file_line "$pending_file" "$target_line_num")
         __pr_debug "Found PR comment: file=$pending_file line=$target_line_num body=$comment_body"
 
@@ -76,7 +77,10 @@ function compr --description "Show PR comments from the last commit with associa
         set -a comment_bodies "$comment_body"
 
         echo (set_color yellow)"$pending_file:$pending_line_num"(set_color normal)
-        echo (set_color cyan)"$pending_comment"(set_color normal)
+        # Display all collected comment lines
+        for cline in $pending_comment_lines
+            echo (set_color cyan)"$cline"(set_color normal)
+        end
         if test -n "$following_line"
             echo "  $target_line_num: $following_line"
         else
@@ -84,6 +88,8 @@ function compr --description "Show PR comments from the last commit with associa
         end
         echo ""
         set pending_comment ""
+        set pending_comment_lines
+        set pending_comment_body
     end
 
     # Get repo owner/name
@@ -152,7 +158,10 @@ function compr --description "Show PR comments from the last commit with associa
     set -l line_offset 0
     set -l pending_comment ""
     set -l pending_line_num 0
+    set -l pending_last_line_num 0
     set -l pending_file ""
+    set -l pending_comment_lines
+    set -l pending_comment_body
 
     # Arrays to store comment data for later submission
     set -l comment_files
@@ -188,14 +197,30 @@ function compr --description "Show PR comments from the last commit with associa
             set -l content (string sub -s 2 -- $line)
             set -l current_line_num (math $hunk_start + $line_offset)
 
-            __flush_pending_comment
-
-            # Check if this line is a PR comment
+            # Check if this line is a PR comment start
             if string match -qr '//\s*PR:' -- $content
-                set pending_comment (string trim -- $content)
+                # Flush any previous pending comment first
+                __flush_pending_comment
+
+                set -l body_part (string replace -r '^.*//\s*PR:\s*' '' -- "$content")
+                set pending_comment "yes"
                 set pending_line_num $current_line_num
+                set pending_last_line_num $current_line_num
                 set pending_file (string trim -- $current_file)
-                __pr_debug "Stored pending comment: file='$pending_file' line=$pending_line_num"
+                set pending_comment_lines (string trim -- $content)
+                set pending_comment_body "$body_part"
+                __pr_debug "Started multiline comment: file='$pending_file' line=$pending_line_num"
+            # Check if this is a continuation line (starts with // but not // PR:)
+            else if test -n "$pending_comment"; and string match -qr '^\s*//' -- $content; and not string match -qr '//\s*PR:' -- $content
+                # This is a continuation of the multiline comment
+                set -l body_part (string replace -r '^\s*//\s?' '' -- "$content")
+                set -a pending_comment_lines (string trim -- $content)
+                set -a pending_comment_body "$body_part"
+                set pending_last_line_num $current_line_num
+                __pr_debug "Continuation line: $body_part"
+            else
+                # Not a comment line, flush any pending comment
+                __flush_pending_comment
             end
 
             set line_offset (math $line_offset + 1)
