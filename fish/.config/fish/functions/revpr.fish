@@ -188,6 +188,11 @@ function revpr --description "Checkout a PR branch in the review worktree"
         echo "  Branch: origin/$pr_head"
     end
 
+    # Store PR number for compr to use later
+    set -l pr_review_file "$review_worktree/.pr_review"
+    echo "$pr_number" > "$pr_review_file"
+    __pr_checkout_debug "Stored PR number in: $pr_review_file"
+
     # Change to review worktree directory
     __pr_checkout_debug "Changing directory to: $review_worktree"
     cd "$review_worktree"

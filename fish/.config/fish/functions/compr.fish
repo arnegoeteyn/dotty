@@ -4,13 +4,16 @@ function compr --description "Show PR comments from the last commit with associa
     or return 1
 
     if set -q _flag_help
-        echo "Usage: compr [-d|--debug] (-p|--pr <number> | -b|--branch <name>)"
+        echo "Usage: compr [-d|--debug] [-p|--pr <number> | -b|--branch <name>]"
         echo ""
         echo "Options:"
         echo "  -p, --pr <number>     PR number to review"
         echo "  -b, --branch <name>   Branch name containing the PR"
         echo "  -d, --debug           Enable debug output"
         echo "  -h, --help            Show this help"
+        echo ""
+        echo "If no PR number or branch is specified, the command will look for a"
+        echo ".pr_review file in the current directory (created by 'revpr')."
         return 0
     end
 
@@ -19,9 +22,20 @@ function compr --description "Show PR comments from the last commit with associa
     set -l pr_number "$_flag_pr"
     set -l branch_name "$_flag_branch"
 
+    # If no PR number or branch specified, try to read from .pr_review file
+    if test -z "$pr_number" -a -z "$branch_name"
+        if test -f ".pr_review"
+            set pr_number (cat .pr_review | string trim)
+            if test -n "$pr_number"
+                echo (set_color cyan)"Using PR #$pr_number from .pr_review file"(set_color normal)
+            end
+        end
+    end
+
     # Validate arguments
     if test -z "$pr_number" -a -z "$branch_name"
         echo (set_color red)"Error: Must specify either -p/--pr <number> or -b/--branch <name>"(set_color normal) >&2
+        echo "Tip: Run from a review worktree created with 'revpr' to auto-detect PR number" >&2
         echo "Use -h for help" >&2
         return 1
     end
