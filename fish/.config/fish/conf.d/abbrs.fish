@@ -9,3 +9,4 @@ abbr -a -- y yazi
 abbr -a -- stow 'stow -d $HOME/Documents/dotty -t $HOME'
 abbr -a -- t 'go test -tags=test -fullpath'
 abbr -a -- tv 'go test -tags=test -fullpath -v'
+abbr -a -- gpr 'gh pr create -b ""'
