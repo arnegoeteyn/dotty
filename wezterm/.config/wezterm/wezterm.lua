@@ -132,4 +132,8 @@ config.window_frame = {
 
 config.front_end = "WebGpu"
 
+config.term = "wezterm"
+
+config.enable_kitty_keyboard = true
+
 return config
