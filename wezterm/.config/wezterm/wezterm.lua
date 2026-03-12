@@ -17,6 +17,7 @@ else
 	config.color_scheme = "kanagawabones"
 end
 
+
 config.window_padding = {
 	left = 0,
 	right = 0,
@@ -128,5 +129,7 @@ end)
 config.window_frame = {
 	font_size = 15.0,
 }
+
+config.front_end = "WebGpu"
 
 return config
