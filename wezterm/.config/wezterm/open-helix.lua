@@ -64,6 +64,7 @@ function M.QuickSelect()
 	local patterns = {
     "[^\"\\s]+\\.go:\\d+",
     "[^\"\\s]+\\.go:\\d+:\\d+",
+    "https?://\\S+",
 	}
 
 	return act.QuickSelectArgs({
@@ -71,7 +72,12 @@ function M.QuickSelect()
 		patterns = patterns,
 		action = wezterm.action_callback(function(window, pane)
 			local selection = window:get_selection_text_for_pane(pane)
-			return M.open_with_hx(window, selection )
+
+			if selection:match("^https?://") then
+				wezterm.open_with(selection)
+			else
+				return M.open_with_hx(window, selection)
+			end
 		end),
 	})
 end
