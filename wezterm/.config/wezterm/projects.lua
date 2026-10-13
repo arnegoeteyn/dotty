@@ -30,22 +30,24 @@ function module.choose_project()
 				return
 			end
 
+			local modname = label:match("([^/]+)$")
+
 			local existing_workspaces = mux.get_workspace_names()
 			local workspace_exists = false
 			for _, name in ipairs(existing_workspaces) do
-				if name == label then
+				if name == modname then
 					workspace_exists = true
 					break
 				end
 			end
 
 			if not workspace_exists then
-				dev_workspace(child_window, child_pane, label, label)
+				dev_workspace(child_window, child_pane, label, modname)
 			end
 
 			child_window:perform_action(
 				wezterm.action.SwitchToWorkspace({
-					name = label,
+					name = modname,
 				}),
 				child_pane
 			)
@@ -82,7 +84,7 @@ function dev_workspace(child_window, child_pane, cwd, label)
 		cwd = cwd .. "/clanker",
 	})
 
-	opencode_pane:send_text("opencode\n")
+	opencode_pane:send_text("sbx-run " .. label .. "\n")
 
 	helix_pane:activate {}
 end

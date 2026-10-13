@@ -11,3 +11,4 @@ abbr -a -- t 'go test -tags=test -fullpath'
 abbr -a -- tv 'go test -tags=test -fullpath -v'
 abbr -a -- gpr 'gh pr create -b ""'
 abbr -a -- gl 'gh pr view --json url | jq .url | tr -d \" | tr -d \n | pbcopy'
+abbr -a -- sc sync-clanker

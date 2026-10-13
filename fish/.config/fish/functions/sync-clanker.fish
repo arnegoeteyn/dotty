@@ -48,6 +48,16 @@ function sync-clanker --description "Sync main and clanker worktrees (push: clan
             or echo "Warning: failed to apply clanker's unstaged changes to main"
         end
 
+        # Carry over clanker's untracked (new) files, which `git diff` never shows.
+        set -l untracked (git -C $clanker_worktree ls-files --others --exclude-standard)
+        if test (count $untracked) -gt 0
+            echo "Copying clanker's untracked files to main..."
+            for file in $untracked
+                mkdir -p (dirname "$main_worktree/$file")
+                cp "$clanker_worktree/$file" "$main_worktree/$file"
+            end
+        end
+
     case '*'
         echo "Usage: sync-clanker push|pull"
         return 1
