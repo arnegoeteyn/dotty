@@ -1,0 +1,7 @@
+# Language servers available in every sandbox; asbx renders them per harness.
+servers:
+  gopls:
+    command: gopls
+    args: [serve]
+    extensions:
+      .go: go

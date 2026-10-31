@@ -1,0 +1,12 @@
+#!/bin/sh
+# Only allow commits on agent/* branches. See shared/workflow.md.
+branch=$(git symbolic-ref --quiet --short HEAD) || {
+  echo "pre-commit: refusing to commit on a detached HEAD; create an agent/<name> branch first" >&2
+  exit 1
+}
+case "$branch" in
+  agent/?*) exit 0 ;;
+esac
+echo "pre-commit: refusing to commit on '$branch'; commits are only allowed on agent/* branches" >&2
+echo "  start one with: git switch -c agent/<short-description> host/main" >&2
+exit 1

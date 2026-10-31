@@ -1,0 +1,17 @@
+# Repos available to the sandboxes. Each gets its own sandbox (copilot-<name>)
+# and is mounted read-only into all the others.
+#
+#   url:  git url, cloned to path if it doesn't exist yet
+#   path: where the repo lives (default: <root>/<name>)
+
+root: ~/Code/nova
+
+repos:
+  b2b:
+    url: git@github.com:belgianmobileid/nova-alm-b2b.git
+  sync:
+    url: git@github.com:belgianmobileid/nova-alm-sync.git
+  ddc:
+    url: git@github.com:belgianmobileid/nova-alm-documentdatacapture.git
+  toolbox:
+    url: git@github.com:belgianmobileid/nova-toolbox.git

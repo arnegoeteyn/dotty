@@ -1,0 +1,18 @@
+schemaVersion: "1"
+agent: copilot
+
+args:
+  instructions:
+    required: true
+    description: Absolute path to the generated instructions dir (passed by asbx)
+
+secrets:
+  copilot:
+    command: gh auth token
+
+env:
+  COPILOT_CUSTOM_INSTRUCTIONS_DIRS: ${{ env.args.instructions }}
+  # The bundled ripgrep crashes on the sandbox VM's 16K pages; use /usr/bin/rg.
+  USE_BUILTIN_RIPGREP: "false"
+  # Start sessions on Copilot Fusion (the "auto" model). /model still overrides.
+  COPILOT_MODEL: auto

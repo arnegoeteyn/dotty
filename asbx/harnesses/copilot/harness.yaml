@@ -1,0 +1,17 @@
+# How asbx renders shared/workflow.md for this harness.
+instructions:
+  file: agent-workflow.instructions.md   # Copilot only reads *.instructions.md from extra dirs
+  header: |
+    ---
+    applyTo: "**"
+    ---
+
+# How asbx renders shared/lsp.yaml for this harness.
+lsp:
+  format: copilot                              # {"lspServers": {...}}
+  file: lsp-config.json
+  target: /home/agent/.copilot/lsp-config.json # symlinked to the rendered file
+
+# Where the rendered shared/skills are linked. ~/.copilot/skills is left to sbx.
+skills:
+  target: /home/agent/.agents/skills

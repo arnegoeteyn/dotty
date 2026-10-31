@@ -1,0 +1,32 @@
+schemaVersion: "1"
+
+sandboxOptions:
+  memory: 6g
+  # Skills come from shared/skills only, not the global sbx skills store.
+  skills: "off"
+
+kits:
+  - ./kits/go
+
+secrets:
+  github:
+    command: gh auth token
+
+lifecycle:
+  postCreate:
+    - name: Make GitHub read-only
+      command: ./scripts/lockdown.sh
+      workdir: ${{ env.fileDir }}/..
+    - name: Build repo linter and mocks
+      command: sbx exec "$SBX_SANDBOX_NAME" sh ${{ env.fileDir }}/scripts/prepare-repo.sh
+      timeout: 15m
+
+# shared/ is mounted read-only so the agent can't edit its own rules or hook.
+additionalWorkspaces:
+  - path: .
+    readOnly: true
+
+env:
+  GIT_CONFIG_COUNT: "1"
+  GIT_CONFIG_KEY_0: core.hooksPath
+  GIT_CONFIG_VALUE_0: ${{ env.fileDir }}/hooks

@@ -1,0 +1,35 @@
+schemaVersion: "2"
+kind: mixin
+name: go
+description: gopls, golangci-lint, just and private Go module access (Go itself ships in the image)
+
+args:
+  gopls:
+    default: v0.24.0
+    description: gopls version to install
+  golangci:
+    default: v2.14.0
+    description: golangci-lint version (repos build their custom linter with it)
+  just:
+    default: "1.58.0"
+    description: just version (matches CI)
+
+environment:
+  variables:
+    GOPRIVATE: github.com/belgianmobileid/*
+    # nova-utils testcontainers default to linux/amd64; the sandbox VM is arm64
+    # and can't emulate it, so use the native image.
+    NOVA_TESTCONTAINERS_PLATFORM: native
+
+setup:
+  install:
+    - description: Let git (and go) read private GitHub repos with the sandbox's github secret
+      command: git config --system credential.https://github.com.helper '!gh auth git-credential'
+    - description: Install gopls
+      command: GOBIN=/usr/local/bin go install golang.org/x/tools/gopls@${{ kit.args.gopls }}
+    - description: Install golangci-lint
+      command: GOBIN=/usr/local/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${{ kit.args.golangci }}
+    - description: Install just
+      command: >-
+        curl -fsSL "https://github.com/casey/just/releases/download/${{ kit.args.just }}/just-${{ kit.args.just }}-$(uname -m)-unknown-linux-musl.tar.gz"
+        | tar -xz -C /usr/local/bin just

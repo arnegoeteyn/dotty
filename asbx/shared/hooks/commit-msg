@@ -1,0 +1,8 @@
+#!/bin/sh
+# Strip Co-authored-by trailers that agents add to commit messages.
+msg="$1"
+tmp="$msg.asbx"
+grep -viE '^[[:space:]]*co-authored-by:' "$msg" > "$tmp" || true
+# Drop trailing blank lines left behind by the removed trailer.
+awk '{ lines[NR] = $0 } END { n = NR; while (n > 0 && lines[n] ~ /^[[:space:]]*$/) n--; for (i = 1; i <= n; i++) print lines[i] }' "$tmp" > "$msg"
+rm -f "$tmp"
