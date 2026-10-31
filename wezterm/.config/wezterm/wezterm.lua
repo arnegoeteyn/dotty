@@ -30,8 +30,6 @@ config.inactive_pane_hsb = {
 	brightness = 0.4,
 }
 
-config.native_macos_fullscreen_mode = true
-
 config.keys = {
 	{ key = "9", mods = "CMD", action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 	{ key = "n", mods = "CMD", action = act.SwitchWorkspaceRelative(1) },
@@ -74,7 +72,6 @@ end)
 wezterm.on("gui-startup", function(cmd)
 	local _, pane, window = wezterm.mux.spawn_window(cmd or {})
 	local gui = window:gui_window()
-	gui:toggle_fullscreen()
 	-- Open the project picker unless wezterm was started with an explicit command.
 	if not (cmd and cmd.args) then
 		gui:perform_action(projects.choose_project({ close_startup = true }), pane)
