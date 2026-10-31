@@ -3,59 +3,72 @@ local module = {}
 
 local mux = wezterm.mux
 
-local project_dir = wezterm.home_dir .. "/Documents/nova"
-
-local function project_dirs()
-	local projects = {}
-
-	for _, dir in ipairs(wezterm.glob(project_dir .. "/*")) do
-		table.insert(projects, dir)
+local function repos_file()
+	local ok, stdout = wezterm.run_child_process({ "realpath", wezterm.config_file })
+	if not ok then
+		return nil
 	end
-
-	return projects
+	-- <dotty>/wezterm/.config/wezterm/wezterm.lua -> <dotty>/repos.yaml
+	local dotty = stdout:gsub("%s+$", ""):match("^(.*)/[^/]+/[^/]+/[^/]+/[^/]+$")
+	return dotty and (dotty .. "/repos.yaml")
 end
 
-function module.choose_project()
-	local choices = {}
-	for _, value in ipairs(project_dirs()) do
-		table.insert(choices, { label = value })
-	end
+local function expand_home(path)
+	return (path:gsub("^~", wezterm.home_dir))
+end
 
-	return wezterm.action.InputSelector({
-		title = "Projects",
-		choices = choices,
-		fuzzy = true,
-		action = wezterm.action_callback(function(child_window, child_pane, id, label)
-			if not label then
-				return
-			end
-
-			local modname = label:match("([^/]+)$")
-
-			local existing_workspaces = mux.get_workspace_names()
-			local workspace_exists = false
-			for _, name in ipairs(existing_workspaces) do
-				if name == modname then
-					workspace_exists = true
-					break
+-- Minimal parser for repos.yaml (root + repos.<name>.{url,path});
+-- this wezterm build has no wezterm.serde.
+local function parse_repos(content)
+	local cfg, current = { repos = {} }, nil
+	for line in content:gmatch("[^\n]+") do
+		line = line:gsub("%s+#.*$", ""):gsub("^#.*$", "")
+		local indent, key, value = line:match("^(%s*)([%w_%-]+):%s*(.-)%s*$")
+		if key then
+			value = value:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
+			if #indent == 0 then
+				current = nil
+				if key == "root" then
+					cfg.root = value
 				end
+			elseif #indent == 2 then
+				current = {}
+				cfg.repos[key] = current
+			elseif current and value ~= "" then
+				current[key] = value
 			end
-
-			if not workspace_exists then
-				dev_workspace(child_window, child_pane, label, modname)
-			end
-
-			child_window:perform_action(
-				wezterm.action.SwitchToWorkspace({
-					name = modname,
-				}),
-				child_pane
-			)
-		end),
-	})
+		end
+	end
+	return cfg
 end
 
-function dev_workspace(child_window, child_pane, cwd, label)
+local function projects()
+	local file = repos_file()
+	local f = file and io.open(file, "r")
+	if not f then
+		wezterm.log_error("projects: cannot open repos.yaml (" .. tostring(file) .. ")")
+		return {}
+	end
+	-- The picker is built at config load, so reload when repos.yaml changes.
+	wezterm.add_to_config_reload_watch_list(file)
+	local content = f:read("*a")
+	f:close()
+
+	local cfg = parse_repos(content)
+
+	local root = expand_home(cfg.root or "")
+	local list = {}
+	for name, repo in pairs(cfg.repos or {}) do
+		local path = repo.path and expand_home(repo.path) or (root .. "/" .. name)
+		table.insert(list, { name = name, path = path })
+	end
+	table.sort(list, function(a, b)
+		return a.name < b.name
+	end)
+	return list
+end
+
+local function dev_workspace(cwd, label)
 	local _, helix_pane, window = mux.spawn_window({
 		workspace = label,
 		cwd = cwd,
@@ -76,7 +89,7 @@ function dev_workspace(child_window, child_pane, cwd, label)
 	helix_pane:send_text("hx main\n")
 	lazygit_pane:send_text("lazygit -p main\n")
 
-	local _, test_pane = window:spawn_tab {cwd = cwd .. "/main"}
+	local _, test_pane = window:spawn_tab({ cwd = cwd .. "/main" })
 
 	local opencode_pane = test_pane:split({
 		direction = "Right",
@@ -86,7 +99,46 @@ function dev_workspace(child_window, child_pane, cwd, label)
 
 	opencode_pane:send_text("sbx-run " .. label .. "\n")
 
-	helix_pane:activate {}
+	helix_pane:activate({})
+end
+
+function module.choose_project()
+	local choices = {}
+	for _, p in ipairs(projects()) do
+		table.insert(choices, { id = p.path, label = p.name })
+	end
+
+	return wezterm.action.InputSelector({
+		title = "Projects",
+		choices = choices,
+		fuzzy = true,
+		action = wezterm.action_callback(function(child_window, child_pane, id, label)
+			if not id then
+				return
+			end
+
+			local modname = label
+			local existing_workspaces = mux.get_workspace_names()
+			local workspace_exists = false
+			for _, name in ipairs(existing_workspaces) do
+				if name == modname then
+					workspace_exists = true
+					break
+				end
+			end
+
+			if not workspace_exists then
+				dev_workspace(id, modname)
+			end
+
+			child_window:perform_action(
+				wezterm.action.SwitchToWorkspace({
+					name = modname,
+				}),
+				child_pane
+			)
+		end),
+	})
 end
 
 return module

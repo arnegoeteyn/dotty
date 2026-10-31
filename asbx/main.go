@@ -103,7 +103,7 @@ func run() error {
 	project := filepath.Join(here, "projects", harness+"-"+name+".yaml")
 	// rm must keep working even when the config is broken or out of date.
 	if cmd != "rm" {
-		repos, err := loadRepos(filepath.Join(here, "repos.yaml"))
+		repos, err := loadRepos(reposFile(here))
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func run() error {
 
 func usage(here string) error {
 	fmt.Printf("usage: ./asbx sync\n       ./asbx %s <repo> [--harness NAME] [sbx env flags...]\n", strings.Join(commands, "|"))
-	repos, err := loadRepos(filepath.Join(here, "repos.yaml"))
+	repos, err := loadRepos(reposFile(here))
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func usage(here string) error {
 
 // syncAll clones missing repos and generates everything for every harness.
 func syncAll(here string) error {
-	repos, err := loadRepos(filepath.Join(here, "repos.yaml"))
+	repos, err := loadRepos(reposFile(here))
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func configHash(here string) (string, error) {
 		h.Write(data)
 		return nil
 	}
-	if err := add(filepath.Join(here, "repos.yaml")); err != nil {
+	if err := add(reposFile(here)); err != nil {
 		return "", err
 	}
 	for _, dir := range []string{"shared", "harnesses"} {
@@ -610,4 +610,9 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 			filepath.Dir(cfg.Skills.Target), cfg.Skills.Target, dst, cfg.Skills.Target),
 	})
 	return nil
+}
+
+// reposFile lives in the dotty root so other tools (wezterm) can share it.
+func reposFile(here string) string {
+	return filepath.Join(here, "..", "repos.yaml")
 }

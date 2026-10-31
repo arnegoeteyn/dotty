@@ -10,7 +10,7 @@ the GitHub API.
 
 ## Layout
 
-- `repos.yaml`: the list of repos (`url`, optional `path`, default `<root>/<name>`).
+- `../repos.yaml` (dotty root, shared with wezterm): the list of repos (`url`, optional `path`, default `<root>/<name>`).
   Missing ones are cloned by `./asbx sync`.
 - `shared/`: used by every harness, mounted read-only into every sandbox.
   - `base.sbxenv.yaml`: memory, `github` secret, kits, lockdown, git hook setup.
@@ -67,7 +67,7 @@ After editing:
 |---|---|
 | `workflow.md`, `lsp.yaml`, skills, hooks | `./asbx sync`; applies to the next agent session |
 | `env` in a sbxenv file | `./asbx sync`; applies on the next `./asbx run` |
-| `repos.yaml`, kits, other sbxenv settings | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
+| `../repos.yaml`, kits, other sbxenv settings | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
 | `main.go` | `just build` |
 
 ## Branch workflow
