@@ -2,6 +2,7 @@ local wezterm = require("wezterm")
 local module = {}
 
 local mux = wezterm.mux
+local killworkspace = require("workspace-kill")
 
 local function repos_file()
 	local ok, stdout = wezterm.run_child_process({ "realpath", wezterm.config_file })
@@ -60,7 +61,7 @@ local function projects()
 	local list = {}
 	for name, repo in pairs(cfg.repos or {}) do
 		local path = repo.path and expand_home(repo.path) or (root .. "/" .. name)
-		table.insert(list, { name = name, path = path })
+		table.insert(list, { name = name, path = path, layout = repo.layout })
 	end
 	table.sort(list, function(a, b)
 		return a.name < b.name
@@ -68,7 +69,46 @@ local function projects()
 	return list
 end
 
+-- Waits for Enter so the sandbox only starts when actually wanted.
+local function sandbox_prompt(label)
+	return "read -P 'Press Enter to start sandbox " .. label .. "... ' answer; and asbx run " .. label .. "\n"
+end
+
 local function dev_workspace(cwd, label)
+	local _, helix_pane, window = mux.spawn_window({
+		workspace = label,
+		cwd = cwd,
+	})
+
+	local lazygit_pane = helix_pane:split({
+		direction = "Right",
+		size = 0.5,
+		cwd = cwd,
+	})
+
+	lazygit_pane:split({
+		direction = "Bottom",
+		size = 0.3,
+		cwd = cwd,
+	})
+
+	helix_pane:send_text("hx .\n")
+	lazygit_pane:send_text("lazygit\n")
+
+	local _, test_pane = window:spawn_tab({ cwd = cwd })
+
+	local opencode_pane = test_pane:split({
+		direction = "Right",
+		size = 0.5,
+		cwd = cwd,
+	})
+
+	opencode_pane:send_text(sandbox_prompt(label))
+
+	helix_pane:activate({})
+end
+
+local function worktree_workspace(cwd, label)
 	local _, helix_pane, window = mux.spawn_window({
 		workspace = label,
 		cwd = cwd,
@@ -97,14 +137,23 @@ local function dev_workspace(cwd, label)
 		cwd = cwd .. "/clanker",
 	})
 
-	opencode_pane:send_text("sbx-run " .. label .. "\n")
+	opencode_pane:send_text(sandbox_prompt(label))
 
 	helix_pane:activate({})
 end
 
-function module.choose_project()
-	local choices = {}
+local layouts = {
+	dev = dev_workspace,
+	worktree = worktree_workspace,
+}
+
+-- opts.close_startup: after a pick, kill the workspace the picker was opened
+-- from (the empty one wezterm creates on launch).
+function module.choose_project(opts)
+	opts = opts or {}
+	local choices, by_name = {}, {}
 	for _, p in ipairs(projects()) do
+		by_name[p.name] = p
 		table.insert(choices, { id = p.path, label = p.name })
 	end
 
@@ -118,6 +167,7 @@ function module.choose_project()
 			end
 
 			local modname = label
+			local previous = child_window:active_workspace()
 			local existing_workspaces = mux.get_workspace_names()
 			local workspace_exists = false
 			for _, name in ipairs(existing_workspaces) do
@@ -128,7 +178,13 @@ function module.choose_project()
 			end
 
 			if not workspace_exists then
-				dev_workspace(id, modname)
+				local layout = by_name[modname].layout or "dev"
+				local spawn = layouts[layout]
+				if not spawn then
+					wezterm.log_error("projects: unknown layout '" .. layout .. "' for " .. modname .. ", using dev")
+					spawn = dev_workspace
+				end
+				spawn(id, modname)
 			end
 
 			child_window:perform_action(
@@ -137,6 +193,10 @@ function module.choose_project()
 				}),
 				child_pane
 			)
+
+			if opts.close_startup and previous ~= modname then
+				killworkspace.kill_workspace(previous)
+			end
 		end),
 	})
 end

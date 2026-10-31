@@ -3,6 +3,11 @@
 #
 #   url:  git url, cloned to path if it doesn't exist yet
 #   path: where the repo lives (default: <root>/<name>)
+#   enabledOn / disabledOn: list of machine names (from the gitignored
+#           .machine file in the dotty root) to limit asbx to; use one, not
+#           both. Neither set = every machine.
+#   layout: wezterm workspace layout, dev (default) or worktree
+#           (worktree expects <path>/main and <path>/clanker)
 
 root: ~/Code/nova
 
@@ -13,5 +18,7 @@ repos:
     url: git@github.com:belgianmobileid/nova-alm-sync.git
   ddc:
     url: git@github.com:belgianmobileid/nova-alm-documentdatacapture.git
+  mdc:
+    url: git@github.com:belgianmobileid/nova-alm-manualdatacapture.git
   toolbox:
     url: git@github.com:belgianmobileid/nova-toolbox.git

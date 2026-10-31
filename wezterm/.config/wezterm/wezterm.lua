@@ -72,8 +72,13 @@ wezterm.on('augment-command-palette', function(window, pane)
 end)
 
 wezterm.on("gui-startup", function(cmd)
-	local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
-	window:gui_window():toggle_fullscreen()
+	local _, pane, window = wezterm.mux.spawn_window(cmd or {})
+	local gui = window:gui_window()
+	gui:toggle_fullscreen()
+	-- Open the project picker unless wezterm was started with an explicit command.
+	if not (cmd and cmd.args) then
+		gui:perform_action(projects.choose_project({ close_startup = true }), pane)
+	end
 end)
 
 local function segments_for_right_status(window)

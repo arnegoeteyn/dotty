@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -25,8 +26,19 @@ var commands = []string{"run", "create", "rm", "plan"}
 const defaultHarness = "copilot"
 
 type repoSpec struct {
-	URL  string `yaml:"url"`
-	Path string `yaml:"path"`
+	URL        string   `yaml:"url"`
+	Path       string   `yaml:"path"`
+	EnabledOn  []string `yaml:"enabledOn"`
+	DisabledOn []string `yaml:"disabledOn"`
+}
+
+// activeOn reports whether the repo is used on this machine; with neither
+// list set it is used everywhere.
+func (s repoSpec) activeOn(machine string) bool {
+	if len(s.EnabledOn) > 0 {
+		return slices.Contains(s.EnabledOn, machine)
+	}
+	return !slices.Contains(s.DisabledOn, machine)
 }
 
 type repo struct {
@@ -260,6 +272,11 @@ func loadRepos(file string) ([]repo, error) {
 		return nil, err
 	}
 
+	machine, err := machineName(filepath.Dir(file))
+	if err != nil {
+		return nil, err
+	}
+
 	// Decode via the mapping node to keep the order from the file.
 	var repos []repo
 	content := cfg.Repos.Content
@@ -268,6 +285,12 @@ func loadRepos(file string) ([]repo, error) {
 		var spec repoSpec
 		if err := content[i+1].Decode(&spec); err != nil {
 			return nil, fmt.Errorf("repo %s: %w", name, err)
+		}
+		if len(spec.EnabledOn) > 0 && len(spec.DisabledOn) > 0 {
+			return nil, fmt.Errorf("repo %s: set enabledOn or disabledOn, not both", name)
+		}
+		if !spec.activeOn(machine) {
+			continue
 		}
 		p := spec.Path
 		if p == "" {
@@ -615,4 +638,17 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 // reposFile lives in the dotty root so other tools (wezterm) can share it.
 func reposFile(here string) string {
 	return filepath.Join(here, "..", "repos.yaml")
+}
+
+// machineName reads the gitignored .machine file next to repos.yaml.
+// Without it, repos with enabledOn are skipped and disabledOn never matches.
+func machineName(dir string) (string, error) {
+	data, err := os.ReadFile(filepath.Join(dir, ".machine"))
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
 }
