@@ -194,6 +194,9 @@ func syncAll(here string) error {
 		if err := writeSkills(here, harness, hcfg, repos, &gen); err != nil {
 			return err
 		}
+		if err := writeHooks(here, harness, hcfg, &gen); err != nil {
+			return err
+		}
 		if err := writeProjects(filepath.Join(here, "projects"), harness, gen, repos); err != nil {
 			return err
 		}
@@ -430,6 +433,9 @@ type harnessConfig struct {
 	Skills *struct {
 		Target string `yaml:"target"`
 	} `yaml:"skills"`
+	Hooks *struct {
+		Target string `yaml:"target"`
+	} `yaml:"hooks"`
 }
 
 func loadHarness(here, harness string) (harnessConfig, error) {
@@ -574,7 +580,48 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 
 	src := filepath.Join(here, "shared", "skills")
 	dst := filepath.Join(here, "generated", harness, "skills")
-	// Update in place: a running sandbox has dst bind-mounted.
+	if err := renderTree(src, dst, data); err != nil {
+		return err
+	}
+
+	gen.mounts = append(gen.mounts, dst)
+	gen.links = append(gen.links, hostCommand{
+		Name: "Link skills",
+		Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && rm -rf %s && ln -sfn %s %s'`,
+			filepath.Dir(cfg.Skills.Target), cfg.Skills.Target, dst, cfg.Skills.Target),
+	})
+	return nil
+}
+
+// writeHooks renders harnesses/<harness>/hooks/* (as text/template, with
+// {{.Shared}} set to the shared/ dir) into generated/<harness>/hooks and links
+// that directory to where the agent reads hooks.
+func writeHooks(here, harness string, cfg harnessConfig, gen *generatedFiles) error {
+	if cfg.Hooks == nil {
+		return nil
+	}
+	if !filepath.IsAbs(cfg.Hooks.Target) {
+		return fmt.Errorf("harness %s: hooks.target must be absolute", harness)
+	}
+	src := filepath.Join(here, "harnesses", harness, "hooks")
+	dst := filepath.Join(here, "generated", harness, "hooks")
+	data := struct{ Shared string }{Shared: filepath.Join(here, "shared")}
+	if err := renderTree(src, dst, data); err != nil {
+		return err
+	}
+	gen.mounts = append(gen.mounts, dst)
+	gen.links = append(gen.links, hostCommand{
+		Name: "Link hooks",
+		Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && rm -rf %s && ln -sfn %s %s'`,
+			filepath.Dir(cfg.Hooks.Target), cfg.Hooks.Target, dst, cfg.Hooks.Target),
+	})
+	return nil
+}
+
+// renderTree renders every file under src as a text/template into dst and
+// removes files in dst that no longer exist in src. dst is updated in place
+// because a running sandbox has it bind-mounted.
+func renderTree(src, dst string, data any) error {
 	if err := os.MkdirAll(dst, 0o755); err != nil {
 		return err
 	}
@@ -598,18 +645,17 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 		}
 		tmpl, err := template.New(rel).Option("missingkey=error").Parse(string(raw))
 		if err != nil {
-			return fmt.Errorf("skill %s: %w", rel, err)
+			return fmt.Errorf("%s: %w", path, err)
 		}
 		var b bytes.Buffer
 		if err := tmpl.Execute(&b, data); err != nil {
-			return fmt.Errorf("skill %s: %w", rel, err)
+			return fmt.Errorf("%s: %w", path, err)
 		}
 		return os.WriteFile(out, b.Bytes(), 0o644)
 	})
 	if err != nil {
 		return err
 	}
-	// Remove skills that no longer exist in shared/skills.
 	var stale []string
 	_ = filepath.WalkDir(dst, func(path string, d os.DirEntry, err error) error {
 		if err == nil && path != dst && !want[path] {
@@ -625,13 +671,6 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 			return err
 		}
 	}
-
-	gen.mounts = append(gen.mounts, dst)
-	gen.links = append(gen.links, hostCommand{
-		Name: "Link skills",
-		Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && rm -rf %s && ln -sfn %s %s'`,
-			filepath.Dir(cfg.Skills.Target), cfg.Skills.Target, dst, cfg.Skills.Target),
-	})
 	return nil
 }
 

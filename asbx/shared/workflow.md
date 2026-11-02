@@ -10,6 +10,20 @@ Go modules or looking at another repo), but pushing, adding remotes for
 pushing, and API writes are blocked on purpose. Do not try to work around it.
 The user fetches your branches from the sandbox to review them.
 
+GraphQL is blocked too (it's always a POST), so `gh pr view/list/diff/checks`
+and other GraphQL-based `gh` commands fail with 403. Use REST via `gh api`:
+
+- PR details: `gh api repos/{owner}/{repo}/pulls/N`
+- List PRs: `gh api 'repos/{owner}/{repo}/pulls?state=open&per_page=50'`
+- Diff: `gh api -H 'Accept: application/vnd.github.diff' repos/{owner}/{repo}/pulls/N`
+- Changed files: `gh api --paginate repos/{owner}/{repo}/pulls/N/files`
+- Review comments: `gh api --paginate repos/{owner}/{repo}/pulls/N/comments`
+- Reviews: `gh api repos/{owner}/{repo}/pulls/N/reviews`
+- Conversation comments: `gh api --paginate repos/{owner}/{repo}/issues/N/comments`
+- Checks: `gh api repos/{owner}/{repo}/commits/<sha>/check-runs`
+
+Use `--jq` to keep the output small.
+
 ## Branches
 
 - `host/<branch>`: a read-only copy of one of the user's branches. Never commit
@@ -71,7 +85,10 @@ Use the repo's `justfile` (`just <recipe>`) or, if it has none, its `Makefile`
 
 ## When asked to look at one of the user's branches
 
-For example "look at my current branch" or "review nova-1092":
+For example "look at my current branch" or "review nova-1092".
+
+When asked to review, use the `pr-review` skill: it also reads the PR body,
+existing comments and CI checks. Otherwise:
 
 1. Fetch it fresh as `host/<branch>`, and fetch `main` as `host/main`.
 2. Review it read-only, e.g. `git log host/main..host/<branch>` and

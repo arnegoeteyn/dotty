@@ -15,3 +15,7 @@ lsp:
 # Where the rendered shared/skills are linked. ~/.copilot/skills is left to sbx.
 skills:
   target: /home/agent/.agents/skills
+
+# Where the rendered harnesses/copilot/hooks are linked ({{.Shared}} = shared/).
+hooks:
+  target: /home/agent/.copilot/hooks
