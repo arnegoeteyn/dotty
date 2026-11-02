@@ -108,6 +108,40 @@ local function dev_workspace(cwd, label)
 	helix_pane:activate({})
 end
 
+local function local_agent_workspace(cwd, label)
+	local _, helix_pane, window = mux.spawn_window({
+		workspace = label,
+		cwd = cwd,
+	})
+
+	local lazygit_pane = helix_pane:split({
+		direction = "Right",
+		size = 0.5,
+		cwd = cwd,
+	})
+
+	lazygit_pane:split({
+		direction = "Bottom",
+		size = 0.3,
+		cwd = cwd,
+	})
+
+	helix_pane:send_text("hx .\n")
+	lazygit_pane:send_text("lazygit\n")
+
+	local _, test_pane = window:spawn_tab({ cwd = cwd })
+
+	local opencode_pane = test_pane:split({
+		direction = "Right",
+		size = 0.5,
+		cwd = cwd,
+	})
+
+	opencode_pane:send_text("opencode\n")
+
+	helix_pane:activate({})
+end
+
 local function worktree_workspace(cwd, label)
 	local _, helix_pane, window = mux.spawn_window({
 		workspace = label,
@@ -145,7 +179,10 @@ end
 local layouts = {
 	dev = dev_workspace,
 	worktree = worktree_workspace,
+	local_agent = local_agent_workspace,
 }
+
+
 
 -- opts.close_startup: after a pick, kill the workspace the picker was opened
 -- from (the empty one wezterm creates on launch).
