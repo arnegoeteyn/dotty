@@ -12,6 +12,9 @@
 root: ~/Code/nova
 
 repos:
+  tf-alm:
+    url: git@github.com:belgianmobileid/infra-tf-account-lifecycle-manager.git
+    path: ~/Code/tf/tf-alm
   rbac:
     url: git@github.com:belgianmobileid/nova-alm-rbac.git
   b2b:
@@ -24,3 +27,7 @@ repos:
     url: git@github.com:belgianmobileid/nova-alm-manualdatacapture.git
   toolbox:
     url: git@github.com:belgianmobileid/nova-toolbox.git
+  dotty:
+    url: git@privategithub:arnegoeteyn/dotty.git
+    layout: local_agent
+    path: ~/Documents/dotty
