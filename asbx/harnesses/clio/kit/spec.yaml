@@ -1,0 +1,92 @@
+schemaVersion: "2"
+kind: sandbox
+name: clio
+displayName: CLIO
+description: CLIO (Perl terminal coding agent) on the GitHub Copilot provider
+
+args:
+  ref:
+    default: main
+    description: CLIO git ref to install (the repo has no release tags)
+
+sandbox:
+  image: docker/sandbox-templates:shell-docker
+  entrypoint: [/home/agent/.local/bin/clio]
+  command:
+    default: []
+    interactive: []
+
+permissions:
+  network:
+    allow:
+      - github.com
+      - api.github.com
+      - api.githubcopilot.com
+      - api.business.githubcopilot.com
+      - api.enterprise.githubcopilot.com
+      - api.individual.githubcopilot.com
+      - "*.githubcopilot.com"
+
+# The sbx proxy swaps the placeholder token below for the real one (gh auth
+# token) on Copilot API requests, so the real token never enters the sandbox.
+credentials:
+  - service: copilot
+    description: GitHub token for the Copilot API (gh auth token)
+    required: true
+    apiKey:
+      name: COPILOT_TOKEN
+      proxyManaged: true
+      inject:
+        # CLIO picks the plan-specific host (business for this account).
+        - domain: api.githubcopilot.com
+          scheme: bearer
+        - domain: api.business.githubcopilot.com
+          scheme: bearer
+        - domain: api.enterprise.githubcopilot.com
+          scheme: bearer
+        - domain: api.individual.githubcopilot.com
+          scheme: bearer
+
+setup:
+  install:
+    - description: Perl modules CLIO needs for HTTPS and the terminal UI
+      command: >-
+        apt-get update && apt-get install -y --no-install-recommends
+        perl libio-socket-ssl-perl libnet-ssleay-perl libterm-readkey-perl ripgrep
+        && rm -rf /var/lib/apt/lists/*
+    - description: Install CLIO to ~/.local/clio
+      user: "1000"
+      command: >-
+        rm -rf /tmp/clio-src
+        && git clone --depth 1 --branch ${{ kit.args.ref }} https://github.com/SyntheticAutonomicMind/CLIO /tmp/clio-src
+        && cd /tmp/clio-src && ./install.sh --user
+        && rm -rf /tmp/clio-src
+  files:
+    # Sandboxed, so no confirmation prompts. onlyIfMissing keeps /config save edits.
+    - path: /home/agent/.clio/config.json
+      mode: "0600"
+      onlyIfMissing: true
+      content: |
+        {
+          "provider": "github_copilot",
+          "model": "github_copilot/claude-sonnet-5.5",
+          "security_level": "relaxed"
+        }
+    # Pre-seeded Copilot session token so CLIO skips its token exchange on
+    # api.github.com (the sandbox proxy puts the gh token there, which GitHub
+    # rejects with 403). Far-future expiry: CLIO never refreshes it. The token
+    # is a placeholder; the proxy injects the real one.
+    - path: /home/agent/.clio/github_tokens.json
+      mode: "0600"
+      onlyIfMissing: true
+      content: |
+        {
+          "github_token": "ghu_sbxproxymanaged",
+          "copilot_token": {
+            "token": "sbxproxymanaged",
+            "expires_at": 4102444800,
+            "refresh_in": 999999999,
+            "username": "sbx"
+          },
+          "saved_at": 0
+        }

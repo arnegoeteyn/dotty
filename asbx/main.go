@@ -139,7 +139,15 @@ func run() error {
 		filepath.Join(here, "harnesses", harness, "sbxenv.yaml"),
 		project,
 	}
-	envArgs := []string{"--env-arg", "instructions=" + instructionsDir(here, harness)}
+	hcfg, err := loadHarness(here, harness)
+	if err != nil {
+		return err
+	}
+	var envArgs []string
+	// Harnesses with instructions.target get a symlink instead of the env-arg.
+	if hcfg.Instructions.Target == "" {
+		envArgs = []string{"--env-arg", "instructions=" + instructionsDir(here, harness)}
+	}
 
 	argv := append(append([]string{"sbx", "env", cmd}, envArgs...), extra...)
 	return syscall.Exec(bin, append(argv, files...), os.Environ())
@@ -188,6 +196,16 @@ func syncAll(here string) error {
 			return err
 		}
 		gen := generatedFiles{mounts: []string{instrDir}}
+		if t := hcfg.Instructions.Target; t != "" {
+			if !filepath.IsAbs(t) {
+				return fmt.Errorf("harness %s: instructions.target must be absolute", harness)
+			}
+			gen.links = append(gen.links, hostCommand{
+				Name: "Link instructions",
+				Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && ln -sfn %s %s'`,
+					filepath.Dir(t), filepath.Join(instrDir, hcfg.Instructions.File), t),
+			})
+		}
 		if err := writeLSP(here, harness, hcfg, &gen); err != nil {
 			return err
 		}
@@ -424,6 +442,7 @@ type harnessConfig struct {
 	Instructions struct {
 		File   string `yaml:"file"`
 		Header string `yaml:"header"`
+		Target string `yaml:"target"`
 	} `yaml:"instructions"`
 	LSP *struct {
 		Format string `yaml:"format"`
@@ -432,6 +451,7 @@ type harnessConfig struct {
 	} `yaml:"lsp"`
 	Skills *struct {
 		Target string `yaml:"target"`
+		Layout string `yaml:"layout"` // "" (skills/<name>/SKILL.md) or "flat" (<name>.md)
 	} `yaml:"skills"`
 	Hooks *struct {
 		Target string `yaml:"target"`
@@ -580,8 +600,17 @@ func writeSkills(here, harness string, cfg harnessConfig, repos []repo, gen *gen
 
 	src := filepath.Join(here, "shared", "skills")
 	dst := filepath.Join(here, "generated", harness, "skills")
-	if err := renderTree(src, dst, data); err != nil {
-		return err
+	switch cfg.Skills.Layout {
+	case "":
+		if err := renderTree(src, dst, data); err != nil {
+			return err
+		}
+	case "flat":
+		if err := renderFlatSkills(src, dst, data); err != nil {
+			return err
+		}
+	default:
+		return fmt.Errorf("harness %s: unknown skills layout %q", harness, cfg.Skills.Layout)
 	}
 
 	gen.mounts = append(gen.mounts, dst)
@@ -669,6 +698,62 @@ func renderTree(src, dst string, data any) error {
 	for _, p := range stale {
 		if err := os.RemoveAll(p); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// renderFlatSkills renders src/<name>/SKILL.md to dst/<name>.md for agents
+// that only load flat skill files. Skills with other files are rejected since
+// those files would be unreachable.
+func renderFlatSkills(src, dst string, data any) error {
+	tmp, err := os.MkdirTemp("", "asbx-skills-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmp)
+	if err := renderTree(src, tmp, data); err != nil {
+		return err
+	}
+	entries, err := os.ReadDir(tmp)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(dst, 0o755); err != nil {
+		return err
+	}
+	want := map[string]bool{}
+	for _, e := range entries {
+		if !e.IsDir() {
+			return fmt.Errorf("shared/skills/%s: flat layout expects only <name>/SKILL.md", e.Name())
+		}
+		files, err := os.ReadDir(filepath.Join(tmp, e.Name()))
+		if err != nil {
+			return err
+		}
+		if len(files) != 1 || files[0].Name() != "SKILL.md" {
+			return fmt.Errorf("shared/skills/%s: flat layout supports only a single SKILL.md", e.Name())
+		}
+		b, err := os.ReadFile(filepath.Join(tmp, e.Name(), "SKILL.md"))
+		if err != nil {
+			return err
+		}
+		name := e.Name() + ".md"
+		want[name] = true
+		if err := os.WriteFile(filepath.Join(dst, name), b, 0o644); err != nil {
+			return err
+		}
+	}
+	// Remove stale entries in place: a running sandbox has dst bind-mounted.
+	old, err := os.ReadDir(dst)
+	if err != nil {
+		return err
+	}
+	for _, e := range old {
+		if !want[e.Name()] {
+			if err := os.RemoveAll(filepath.Join(dst, e.Name())); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

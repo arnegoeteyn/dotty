@@ -1,0 +1,10 @@
+schemaVersion: "1"
+agent: clio
+
+kits:
+  - ./kit
+
+# Injected by the sbx proxy on api.githubcopilot.com (see kit credentials).
+secrets:
+  copilot:
+    command: gh auth token

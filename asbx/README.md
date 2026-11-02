@@ -1,7 +1,7 @@
 # copilot-sbx
 
 AI coding agents in Docker Sandboxes, one sandbox per repo and harness
-(currently only `copilot`).
+(`copilot`, `clio`).
 
 Each sandbox (`<harness>-<repo>`) works on a private clone of its repo and has
 read-only access to all other repos. GitHub is read-only for it: it can
@@ -34,6 +34,17 @@ the GitHub API.
     rendered for this agent and where the agent reads them.
   - `hooks/`: agent hook configs (templates, `{{.Shared}}` = `shared/`). For
     copilot: notify on questions, permission prompts, errors and end of turn.
+- `harnesses/clio/`: [CLIO](https://github.com/SyntheticAutonomicMind/CLIO),
+  a custom sbx kit (`kit/spec.yaml`) since it isn't a built-in agent.
+  `workflow.md` is linked as `~/.clio/profile.md` (added to every session, the
+  repo's `AGENTS.md` still loads), skills are flattened to
+  `~/.clio/skills/<name>.md` (`skills.layout: flat`). No LSP or hooks: CLIO
+  has neither. Config is seeded once with `security_level: relaxed` and
+  `claude-sonnet-5.5`.
+  Auth: no login. `~/.clio/github_tokens.json` is seeded with a placeholder
+  Copilot token that never expires, so CLIO skips its token exchange (which
+  the proxy breaks with a 403); the proxy injects `gh auth token` on
+  `api.githubcopilot.com`.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.

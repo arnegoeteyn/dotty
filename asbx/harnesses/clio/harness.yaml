@@ -1,0 +1,12 @@
+# How asbx renders shared/workflow.md for this harness.
+# CLIO adds ~/.clio/profile.md to every session, next to the repo's AGENTS.md.
+instructions:
+  file: profile.md
+  target: /home/agent/.clio/profile.md
+
+# CLIO only loads flat skill files: ~/.clio/skills/<name>.md.
+skills:
+  target: /home/agent/.clio/skills
+  layout: flat
+
+# No lsp or hooks: CLIO supports neither.

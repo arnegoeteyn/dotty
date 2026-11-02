@@ -61,6 +61,11 @@ The user's currently checked-out branch:
 
 Never commit to `main`, to `host/*`, or on a detached HEAD.
 
+Always commit before you report back or end your turn, even for small or
+in-progress changes. The user only sees your work by fetching your branch from
+the sandbox; uncommitted changes in your clone are invisible to them. Never
+end a turn with a dirty working tree (check `git status`).
+
 ## Checking your changes
 
 These checks are mandatory for every change, however small (comments, docs
