@@ -16,6 +16,8 @@ the GitHub API.
   - `base.sbxenv.yaml`: memory, `github` secret, kits, lockdown, git hook setup.
   - `kits/go/`: installs `gopls`, `golangci-lint` and `just`, sets up private
     module access and native-arch testcontainers (Go itself is in the image).
+  - `scripts/notify.sh`: agent hook that shows a macOS notification via OSC 9
+    on the attached terminal (WezTerm needs notification permission in macOS).
   - `scripts/prepare-repo.sh`: runs once per new sandbox; builds the repo's
     custom linter (`preparelint`) and mocks (`mocks`) if it has those recipes.
   - `lsp.yaml`: language servers; rendered per harness.
@@ -28,8 +30,10 @@ the GitHub API.
   - `hooks/commit-msg`: strips `Co-authored-by:` trailers.
 - `harnesses/<name>/`: agent-specific bits.
   - `sbxenv.yaml`: agent, secrets, how it finds the instructions.
-  - `harness.yaml`: how `workflow.md`, `lsp.yaml` and `skills/` are rendered
-    for this agent and where the agent reads them.
+  - `harness.yaml`: how `workflow.md`, `lsp.yaml`, `skills/` and `hooks/` are
+    rendered for this agent and where the agent reads them.
+  - `hooks/`: agent hook configs (templates, `{{.Shared}}` = `shared/`). For
+    copilot: notify on questions, permission prompts, errors and end of turn.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.
@@ -65,9 +69,9 @@ After editing:
 
 | You edit | Then |
 |---|---|
-| `workflow.md`, `lsp.yaml`, skills, hooks | `./asbx sync`; applies to the next agent session |
+| `workflow.md`, `lsp.yaml`, skills, git hooks, agent hook files | `./asbx sync`; applies to the next agent session |
 | `env` in a sbxenv file | `./asbx sync`; applies on the next `./asbx run` |
-| `../repos.yaml`, kits, other sbxenv settings | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
+| `../repos.yaml`, kits, other sbxenv settings, adding `hooks:` to a harness | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
 | `main.go` | `just build` |
 
 ## Branch workflow

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "hooks": {
+    "notification": [
+      {
+        "type": "command",
+        "matcher": "permission_prompt|elicitation_dialog|agent_idle",
+        "bash": "sh {{.Shared}}/scripts/notify.sh notification",
+        "timeoutSec": 5
+      }
+    ],
+    "agentStop": [
+      { "type": "command", "bash": "sh {{.Shared}}/scripts/notify.sh stop", "timeoutSec": 5 }
+    ],
+    "errorOccurred": [
+      { "type": "command", "bash": "sh {{.Shared}}/scripts/notify.sh error", "timeoutSec": 5 }
+    ]
+  }
+}
