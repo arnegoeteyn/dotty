@@ -12,6 +12,8 @@
 root: ~/Code/nova
 
 repos:
+  rbac:
+    url: git@github.com:belgianmobileid/nova-alm-rbac.git
   b2b:
     url: git@github.com:belgianmobileid/nova-alm-b2b.git
   sync:
