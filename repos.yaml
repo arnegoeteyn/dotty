@@ -1,4 +1,4 @@
-# Repos used by asbx (one sandbox each, copilot-<name>, mounted read-only into
+# Repos used by asbx (one sandbox each, <harness>-<name>, mounted read-only into
 # the others) and by the wezterm project picker.
 #
 #   url:  git url, cloned to path if it doesn't exist yet

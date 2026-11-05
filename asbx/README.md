@@ -87,7 +87,7 @@ Done automatically per sandbox, no action needed:
 - `./asbx sync`: clones missing repos and generates `generated/` and
   `projects/` for all harnesses. Nothing else writes these files.
 - `./asbx run <repo> [--harness NAME]`: create if needed, then attach
-  (`create`, `plan`, `rm` also work). Default harness is `copilot`.
+  (`create`, `plan`, `rm` also work). Default harness is `pi`.
   `run`, `create` and `plan` refuse to start if `repos.yaml`, `shared/` or
   `harnesses/` changed since the last sync. `rm` always works.
   `./asbx` with no arguments lists the repos and harnesses and whether a sync
@@ -114,8 +114,8 @@ After editing:
 
 Review the agent's branches (from the repo's host checkout):
 
-    git fetch sandbox-copilot-<repo>
-    git diff main..sandbox-copilot-<repo>/agent/<description>
+    git fetch sandbox-pi-<repo>
+    git diff main..sandbox-pi-<repo>/agent/<description>
 
 Removing a sandbox keeps its branches on the host under
 `refs/sandboxes/<sandbox>/`. Don't `git fetch --prune` the sandbox remote:

@@ -23,7 +23,7 @@ import (
 
 var commands = []string{"run", "create", "rm", "plan"}
 
-const defaultHarness = "copilot"
+const defaultHarness = "pi"
 
 type repoSpec struct {
 	URL        string   `yaml:"url"`
