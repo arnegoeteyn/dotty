@@ -188,6 +188,15 @@ func syncAll(here string) error {
 			return err
 		}
 		gen := generatedFiles{mounts: []string{instrDir}}
+		if t := hcfg.Instructions.Target; t != "" {
+			if !filepath.IsAbs(t) {
+				return fmt.Errorf("harness %s: instructions.target must be absolute", harness)
+			}
+			gen.links = append(gen.links, linkFile("Link instructions", filepath.Join(instrDir, hcfg.Instructions.File), t))
+		}
+		if err := writeFiles(here, harness, hcfg, &gen); err != nil {
+			return err
+		}
 		if err := writeLSP(here, harness, hcfg, &gen); err != nil {
 			return err
 		}
@@ -424,7 +433,14 @@ type harnessConfig struct {
 	Instructions struct {
 		File   string `yaml:"file"`
 		Header string `yaml:"header"`
+		Target string `yaml:"target"`
 	} `yaml:"instructions"`
+	Files []struct {
+		File   string `yaml:"file"`
+		Target string `yaml:"target"`
+		// Copy instead of link, for files the agent writes to itself.
+		Copy bool `yaml:"copy"`
+	} `yaml:"files"`
 	LSP *struct {
 		Format string `yaml:"format"`
 		File   string `yaml:"file"`
@@ -546,11 +562,50 @@ func writeLSP(here, harness string, cfg harnessConfig, gen *generatedFiles) erro
 		return err
 	}
 	gen.mounts = append(gen.mounts, dir)
-	gen.links = append(gen.links, hostCommand{
-		Name: "Link LSP config",
+	gen.links = append(gen.links, linkFile("Link LSP config", file, l.Target))
+	return nil
+}
+
+func linkFile(name, file, target string) hostCommand {
+	return hostCommand{
+		Name: name,
 		Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && ln -sfn %s %s'`,
-			filepath.Dir(l.Target), file, l.Target),
-	})
+			filepath.Dir(target), file, target),
+	}
+}
+
+// writeFiles renders the harness's files: entries from harnesses/<harness>/files
+// (as text/template, {{.Shared}} = shared/) into generated/<harness>/files and
+// links (or copies, once at create) each one to its target.
+func writeFiles(here, harness string, cfg harnessConfig, gen *generatedFiles) error {
+	if len(cfg.Files) == 0 {
+		return nil
+	}
+	src := filepath.Join(here, "harnesses", harness, "files")
+	dst := filepath.Join(here, "generated", harness, "files")
+	data := struct{ Shared string }{Shared: filepath.Join(here, "shared")}
+	if err := renderTree(src, dst, data); err != nil {
+		return err
+	}
+	for _, f := range cfg.Files {
+		if f.File == "" || filepath.Base(f.File) != f.File || !filepath.IsAbs(f.Target) {
+			return fmt.Errorf("harness %s: files need a plain file name and an absolute target", harness)
+		}
+		file := filepath.Join(dst, f.File)
+		if _, err := os.Stat(file); err != nil {
+			return fmt.Errorf("harness %s: %w", harness, err)
+		}
+		if f.Copy {
+			gen.links = append(gen.links, hostCommand{
+				Name: "Copy " + f.File,
+				Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && cp %s %s'`,
+					filepath.Dir(f.Target), file, f.Target),
+			})
+			continue
+		}
+		gen.links = append(gen.links, linkFile("Link "+f.File, file, f.Target))
+	}
+	gen.mounts = append(gen.mounts, dst)
 	return nil
 }
 

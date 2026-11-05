@@ -1,0 +1,14 @@
+schemaVersion: "1"
+agent: pi
+kits:
+  - docker.io/sbx/pi-kit:latest
+  - ./kits/copilot
+
+args:
+  instructions:
+    required: true
+    description: Absolute path to the generated instructions dir (passed by asbx)
+
+secrets:
+  copilot:
+    command: gh auth token

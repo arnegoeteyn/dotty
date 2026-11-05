@@ -1,7 +1,7 @@
 # copilot-sbx
 
 AI coding agents in Docker Sandboxes, one sandbox per repo and harness
-(currently only `copilot`).
+(`copilot` and `pi`).
 
 Each sandbox (`<harness>-<repo>`) works on a private clone of its repo and has
 read-only access to all other repos. GitHub is read-only for it: it can
@@ -34,6 +34,16 @@ the GitHub API.
     rendered for this agent and where the agent reads them.
   - `hooks/`: agent hook configs (templates, `{{.Shared}}` = `shared/`). For
     copilot: notify on questions, permission prompts, errors and end of turn.
+  - `files/`: extra config files (templates), linked to the `files:` targets in
+    `harness.yaml`, or copied once at create with `copy: true` (for files the
+    agent writes itself).
+  - `kits/`: harness-only kits.
+- `harnesses/pi/`: pi from the `docker.io/sbx/pi-kit` image. `kits/copilot`
+  binds the `copilot` secret so the proxy adds the real token on
+  `api.githubcopilot.com` (pi only sees a placeholder `COPILOT_GITHUB_TOKEN`);
+  `files/models.json` points pi at that host instead of
+  `api.individual.githubcopilot.com`, and `files/settings.json` makes Copilot
+  the default provider. No LSP or notify hooks yet.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.

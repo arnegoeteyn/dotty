@@ -1,0 +1,20 @@
+schemaVersion: "2"
+kind: mixin
+name: pi-copilot
+description: GitHub Copilot credential for pi, swapped in by the sandbox proxy
+
+permissions:
+  network:
+    allow:
+      - api.githubcopilot.com
+
+credentials:
+  - service: copilot
+    apiKey:
+      # pi's github-copilot provider sends this as the bearer token as is.
+      name: COPILOT_GITHUB_TOKEN
+      proxyManaged: true
+      inject:
+        - domain: api.githubcopilot.com
+          header: Authorization
+          format: 'Bearer %s'

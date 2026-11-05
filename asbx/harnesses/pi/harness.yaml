@@ -1,0 +1,19 @@
+# How asbx renders shared/workflow.md for this harness.
+instructions:
+  file: AGENTS.md
+  target: /home/agent/.pi/agent/AGENTS.md # symlinked to the rendered file
+
+# Where the rendered shared/skills are linked.
+skills:
+  target: /home/agent/.agents/skills
+
+# Extra config files from harnesses/pi/files, each symlinked to its target.
+files:
+  # pi defaults to api.individual.githubcopilot.com; the sbx proxy injects
+  # Copilot auth on api.githubcopilot.com.
+  - file: models.json
+    target: /home/agent/.pi/agent/models.json
+  # Copied once at create: pi writes to its own settings.json.
+  - file: settings.json
+    target: /home/agent/.pi/agent/settings.json
+    copy: true
