@@ -5,5 +5,8 @@
     "github-copilot/claude-haiku-5.5",
     "github-copilot/claude-sonnet-5.5",
     "github-copilot/claude-opus-5.5"
+  ],
+  "packages": [
+    "npm:@juicesharp/rpiv-ask-user-question@2.15.0"
   ]
 }
