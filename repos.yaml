@@ -31,3 +31,5 @@ repos:
     url: git@privategithub:arnegoeteyn/dotty.git
     layout: local_agent
     path: ~/Documents/dotty
+  corebe-log:
+    url: git@github.com:belgianmobileid/nova-corebe-log-mapper.git
