@@ -41,9 +41,9 @@ decide whether to hand it to the implementer, or the wizard.
 
 ## Git
 
-The lead owns the branch and the commits. The branch workflow in
-AGENTS.md is the lead's job, not yours: don't create or switch branches,
-don't commit, and leave your changes in the working tree for the lead.
+The lead owns the branch and the `committer` owns the commits. The branch
+workflow in AGENTS.md is not yours: don't create or switch branches, don't
+commit, and leave your changes in the working tree.
 
 ## Reporting back
 

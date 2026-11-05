@@ -59,9 +59,9 @@ the GitHub API.
   that runs agents as separate `pi` processes, single, parallel or chained).
   `agents/` (linked to `~/.pi/agent/agents`) holds those agents (scout,
   architect, refactorer, implementer, test-writer, wizard, reviewer, pruner,
-  archivist), and `prompts/` (linked to `~/.pi/agent/prompts`) adds
+  archivist, committer), and `prompts/` (linked to `~/.pi/agent/prompts`) adds
   `/lead <request>` (orchestrate them: scout, design, approval, implement,
-  review, prune, commit; it asks the archivist what we've learned) and `/feedback <complaint>`. No LSP yet.
+  review, prune, then the haiku `committer` commits; it asks the archivist what we've learned) and `/feedback <complaint>`. No LSP yet.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.
