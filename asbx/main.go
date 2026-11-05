@@ -76,7 +76,9 @@ type hostCommand struct {
 // generatedFiles is what asbx renders for a harness and how it reaches the sandbox.
 type generatedFiles struct {
 	mounts []string
-	links  []hostCommand
+	// writable are host dirs mounted read-write (e.g. learnings).
+	writable []string
+	links    []hostCommand
 }
 
 func main() {
@@ -188,6 +190,16 @@ func syncAll(here string) error {
 			return err
 		}
 		gen := generatedFiles{mounts: []string{instrDir}}
+		for _, w := range hcfg.Writable {
+			if w == "" || filepath.Base(w) != w {
+				return fmt.Errorf("harness %s: writable entry %q must be a plain directory name", harness, w)
+			}
+			dir := filepath.Join(here, w)
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
+			gen.writable = append(gen.writable, dir)
+		}
 		if t := hcfg.Instructions.Target; t != "" {
 			if !filepath.IsAbs(t) {
 				return fmt.Errorf("harness %s: instructions.target must be absolute", harness)
@@ -204,6 +216,9 @@ func syncAll(here string) error {
 			return err
 		}
 		if err := writeHooks(here, harness, hcfg, &gen); err != nil {
+			return err
+		}
+		if err := writeDirs(here, harness, hcfg, &gen); err != nil {
 			return err
 		}
 		if err := writeProjects(filepath.Join(here, "projects"), harness, gen, repos); err != nil {
@@ -378,6 +393,9 @@ func writeProjects(dir, harness string, gen generatedFiles, repos []repo) error 
 		for _, m := range gen.mounts {
 			p.AdditionalWorkspaces = append(p.AdditionalWorkspaces, mount{Path: m, ReadOnly: true})
 		}
+		for _, w := range gen.writable {
+			p.AdditionalWorkspaces = append(p.AdditionalWorkspaces, mount{Path: w, ReadOnly: false})
+		}
 		if len(gen.links) > 0 {
 			p.Lifecycle = &lifecycle{PostCreate: gen.links}
 		}
@@ -453,6 +471,13 @@ type harnessConfig struct {
 		Dir    string `yaml:"dir"` // under harnesses/<harness>/, default "hooks"
 		Target string `yaml:"target"`
 	} `yaml:"hooks"`
+	// More directories under harnesses/<harness>/, rendered and linked like hooks.
+	Dirs []struct {
+		Dir    string `yaml:"dir"`
+		Target string `yaml:"target"`
+	} `yaml:"dirs"`
+	// Top-level asbx/ dirs mounted read-write, e.g. learnings (agents write there).
+	Writable []string `yaml:"writable"`
 }
 
 func loadHarness(here, harness string) (harnessConfig, error) {
@@ -584,7 +609,7 @@ func writeFiles(here, harness string, cfg harnessConfig, gen *generatedFiles) er
 	}
 	src := filepath.Join(here, "harnesses", harness, "files")
 	dst := filepath.Join(here, "generated", harness, "files")
-	data := struct{ Shared string }{Shared: filepath.Join(here, "shared")}
+	data := struct{ Shared, Learnings string }{Shared: filepath.Join(here, "shared"), Learnings: filepath.Join(here, "learnings")}
 	if err := renderTree(src, dst, data); err != nil {
 		return err
 	}
@@ -656,27 +681,44 @@ func writeHooks(here, harness string, cfg harnessConfig, gen *generatedFiles) er
 	if cfg.Hooks == nil {
 		return nil
 	}
-	if !filepath.IsAbs(cfg.Hooks.Target) {
-		return fmt.Errorf("harness %s: hooks.target must be absolute", harness)
-	}
 	dir := cfg.Hooks.Dir
 	if dir == "" {
 		dir = "hooks"
 	}
-	if filepath.Base(dir) != dir {
-		return fmt.Errorf("harness %s: hooks.dir must be a plain directory name", harness)
+	return writeDir(here, harness, "hooks", dir, cfg.Hooks.Target, gen)
+}
+
+// writeDirs does the same as writeHooks for each dirs: entry.
+func writeDirs(here, harness string, cfg harnessConfig, gen *generatedFiles) error {
+	for _, d := range cfg.Dirs {
+		if err := writeDir(here, harness, "dirs", d.Dir, d.Target, gen); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// writeDir renders harnesses/<harness>/<dir>/* (as text/template, with
+// {{.Shared}} set to the shared/ dir) into generated/<harness>/<dir> and links
+// that directory to target.
+func writeDir(here, harness, key, dir, target string, gen *generatedFiles) error {
+	if !filepath.IsAbs(target) {
+		return fmt.Errorf("harness %s: %s target must be absolute", harness, key)
+	}
+	if dir == "" || filepath.Base(dir) != dir {
+		return fmt.Errorf("harness %s: %s dir must be a plain directory name", harness, key)
 	}
 	src := filepath.Join(here, "harnesses", harness, dir)
 	dst := filepath.Join(here, "generated", harness, dir)
-	data := struct{ Shared string }{Shared: filepath.Join(here, "shared")}
+	data := struct{ Shared, Learnings string }{Shared: filepath.Join(here, "shared"), Learnings: filepath.Join(here, "learnings")}
 	if err := renderTree(src, dst, data); err != nil {
 		return err
 	}
 	gen.mounts = append(gen.mounts, dst)
 	gen.links = append(gen.links, hostCommand{
-		Name: "Link hooks",
+		Name: "Link " + dir,
 		Command: fmt.Sprintf(`sbx exec "$SBX_SANDBOX_NAME" sh -c 'mkdir -p %s && rm -rf %s && ln -sfn %s %s'`,
-			filepath.Dir(cfg.Hooks.Target), cfg.Hooks.Target, dst, cfg.Hooks.Target),
+			filepath.Dir(target), target, dst, target),
 	})
 	return nil
 }

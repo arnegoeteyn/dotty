@@ -26,6 +26,11 @@ the GitHub API.
     global `sbx skills` store is turned off for these sandboxes.
   - `workflow.md`: the agent's rules (branch workflow, sandbox limits).
     Edit this one; it's rendered per harness.
+  - `../learnings/` (top level, not under `shared/`): `STYLE_GUIDE.md`
+    (hand-maintained), `meta.md` (the structure) and `lessons/` (one file per
+    lesson, written by the `archivist` agent via pi's `/feedback`). Read by
+    pi's subagents; the lead queries it through the archivist. Mounted read-write only for harnesses listing it in
+    `writable:`; `{{.Learnings}}` in templates points here.
   - `hooks/pre-commit`: only allows commits on `agent/*` branches.
   - `hooks/commit-msg`: strips `Co-authored-by:` trailers.
 - `harnesses/<name>/`: agent-specific bits.
@@ -37,6 +42,8 @@ the GitHub API.
   - `files/`: extra config files (templates), linked to the `files:` targets in
     `harness.yaml`, or copied once at create with `copy: true` (for files the
     agent writes itself).
+  - more directories (templates), each linked to its target via `dirs:` in
+    `harness.yaml`, like `hooks/`.
   - `kits/`: harness-only kits.
 - `harnesses/pi/`: pi from the `docker.io/sbx/pi-kit` image. `kits/copilot`
   binds the `copilot` secret so the proxy adds the real token on
@@ -47,7 +54,14 @@ the GitHub API.
   `index.ts`), linked to `~/.pi/agent/extensions` via `hooks.dir`; rendered as
   templates, so avoid a literal `{{`. `extensions/notify.ts` calls
   `shared/scripts/notify.sh` when a run ends, fails or waits for input;
-  `extensions/usage.ts` adds `/usage` (Copilot quota and session tokens). No LSP yet.
+  `extensions/usage.ts` adds `/usage` (Copilot quota and session tokens);
+  `extensions/subagent/` is pi's example subagent extension (a `subagent` tool
+  that runs agents as separate `pi` processes, single, parallel or chained).
+  `agents/` (linked to `~/.pi/agent/agents`) holds those agents (scout,
+  architect, refactorer, implementer, test-writer, wizard, reviewer, pruner,
+  archivist), and `prompts/` (linked to `~/.pi/agent/prompts`) adds
+  `/lead <request>` (orchestrate them: scout, design, approval, implement,
+  review, prune, commit; it asks the archivist what we've learned) and `/feedback <complaint>`. No LSP yet.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.
@@ -83,9 +97,10 @@ After editing:
 
 | You edit | Then |
 |---|---|
-| `workflow.md`, `lsp.yaml`, skills, git hooks, agent hook files | `./asbx sync`; applies to the next agent session |
+| `workflow.md`, `lsp.yaml`, skills, git hooks, agent hook files, `dirs:` contents | `./asbx sync`; applies to the next agent session |
+| `learnings/` | nothing; the sandbox sees the change live |
 | `env` in a sbxenv file | `./asbx sync`; applies on the next `./asbx run` |
-| `../repos.yaml`, kits, other sbxenv settings, adding `hooks:` to a harness | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
+| `../repos.yaml`, kits, other sbxenv settings, adding `hooks:` or `dirs:` entries to a harness | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
 | `main.go` | `just build` |
 
 ## Branch workflow

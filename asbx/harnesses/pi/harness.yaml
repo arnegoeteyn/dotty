@@ -13,6 +13,19 @@ hooks:
   dir: extensions
   target: /home/agent/.pi/agent/extensions
 
+# Top-level asbx/ dirs mounted read-write (the agents write to them).
+writable:
+  - learnings
+
+# More dirs, rendered and linked like hooks ({{.Shared}} = shared/).
+dirs:
+  # Subagent definitions for extensions/subagent.
+  - dir: agents
+    target: /home/agent/.pi/agent/agents
+  # Prompt templates (/lead, /feedback).
+  - dir: prompts
+    target: /home/agent/.pi/agent/prompts
+
 # Extra config files from harnesses/pi/files, each symlinked to its target.
 files:
   # pi defaults to api.individual.githubcopilot.com; the sbx proxy injects
