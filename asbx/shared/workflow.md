@@ -48,7 +48,11 @@ The user's currently checked-out branch:
    `git switch -c agent/<short-description> host/<start>`.
 4. Commit your work on that branch, checking it as described in
    "Checking your changes" below (targeted tests, then lint before each
-   commit).
+   commit). Split the work into multiple commits when the change has distinct
+   logical steps (e.g. a refactor, then the feature built on top of it, or
+   unrelated fixes), so each commit is one self-contained, reviewable change
+   with a clear message. Don't split a small, cohesive change just to have more
+   commits.
 5. After your last commit, run the full test suite (`just test` /
    `make test`) exactly once. This step is required for every change, even a
    one-line comment; do not skip it or replace it with targeted tests.
