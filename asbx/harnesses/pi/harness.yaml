@@ -23,3 +23,6 @@ files:
   - file: settings.json
     target: /home/agent/.pi/agent/settings.json
     copy: true
+  # ctrl+j/ctrl+k navigate selection lists (model picker, /tree, etc.).
+  - file: keybindings.json
+    target: /home/agent/.pi/agent/keybindings.json
