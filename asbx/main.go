@@ -450,6 +450,7 @@ type harnessConfig struct {
 		Target string `yaml:"target"`
 	} `yaml:"skills"`
 	Hooks *struct {
+		Dir    string `yaml:"dir"` // under harnesses/<harness>/, default "hooks"
 		Target string `yaml:"target"`
 	} `yaml:"hooks"`
 }
@@ -658,8 +659,15 @@ func writeHooks(here, harness string, cfg harnessConfig, gen *generatedFiles) er
 	if !filepath.IsAbs(cfg.Hooks.Target) {
 		return fmt.Errorf("harness %s: hooks.target must be absolute", harness)
 	}
-	src := filepath.Join(here, "harnesses", harness, "hooks")
-	dst := filepath.Join(here, "generated", harness, "hooks")
+	dir := cfg.Hooks.Dir
+	if dir == "" {
+		dir = "hooks"
+	}
+	if filepath.Base(dir) != dir {
+		return fmt.Errorf("harness %s: hooks.dir must be a plain directory name", harness)
+	}
+	src := filepath.Join(here, "harnesses", harness, dir)
+	dst := filepath.Join(here, "generated", harness, dir)
 	data := struct{ Shared string }{Shared: filepath.Join(here, "shared")}
 	if err := renderTree(src, dst, data); err != nil {
 		return err

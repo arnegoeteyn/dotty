@@ -7,6 +7,12 @@ instructions:
 skills:
   target: /home/agent/.agents/skills
 
+# pi extensions (*.ts, or dirs with index.ts) from harnesses/pi/extensions.
+# Rendered as templates like hooks ({{.Shared}} = shared/), so avoid a literal "{{".
+hooks:
+  dir: extensions
+  target: /home/agent/.pi/agent/extensions
+
 # Extra config files from harnesses/pi/files, each symlinked to its target.
 files:
   # pi defaults to api.individual.githubcopilot.com; the sbx proxy injects

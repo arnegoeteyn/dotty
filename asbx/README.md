@@ -43,7 +43,10 @@ the GitHub API.
   `api.githubcopilot.com` (pi only sees a placeholder `COPILOT_GITHUB_TOKEN`);
   `files/models.json` points pi at that host instead of
   `api.individual.githubcopilot.com`, and `files/settings.json` makes Copilot
-  the default provider. No LSP or notify hooks yet.
+  the default provider. `extensions/`: pi extensions (`*.ts` or dirs with
+  `index.ts`), linked to `~/.pi/agent/extensions` via `hooks.dir`; rendered as
+  templates, so avoid a literal `{{`. `extensions/notify.ts` calls
+  `shared/scripts/notify.sh` when a run ends, fails or waits for input. No LSP yet.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.
