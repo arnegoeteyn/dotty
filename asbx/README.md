@@ -56,7 +56,10 @@ the GitHub API.
   `shared/scripts/notify.sh` when a run ends, fails or waits for input;
   `extensions/usage.ts` adds `/usage` (Copilot quota and session tokens);
   `extensions/subagent/` is pi's example subagent extension (a `subagent` tool
-  that runs agents as separate `pi` processes, single, parallel or chained).
+  that runs agents as separate `pi` processes, single, parallel or chained);
+  `extensions/subagent-viewer.ts` adds `ctrl+shift+s` (or `/subagents`): an
+  overlay listing every subagent run of the session (running ones live),
+  enter opens a run's full conversation.
   `agents/` (linked to `~/.pi/agent/agents`) holds those agents (scout,
   architect, refactorer, implementer, test-writer, wizard, reviewer, pruner,
   archivist, committer), and `prompts/` (linked to `~/.pi/agent/prompts`) adds
