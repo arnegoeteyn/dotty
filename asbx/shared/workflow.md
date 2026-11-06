@@ -41,8 +41,11 @@ The user's currently checked-out branch:
 
 ## When asked to implement or change something
 
-1. Pick the starting point. Default is the user's `main`. If the user names a
-   different branch, or says "my current branch", use that instead.
+1. Pick the starting point. Default is the user's currently checked-out branch
+   (`git -C /run/sandbox/source branch --show-current`), never `main` and never
+   whatever branch the sandbox clone has checked out (it may be stale). Only
+   use another branch if the user names one. If the user's checkout is on a
+   detached HEAD, ask which branch to use.
 2. Fetch it fresh as `host/<start>` (see above), even if it already exists.
 3. Create a new branch before editing anything:
    `git switch -c agent/<short-description> host/<start>`.
