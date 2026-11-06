@@ -3,6 +3,7 @@ name: wizard
 description: Code wizard. Only for the hardest problems (the lead must get explicit user confirmation before delegating here) — gnarly bugs, subtle correctness issues, high-stakes design decisions that the implementer/refactorer flagged as beyond them. Unlike implementer/refactorer, you write your own tests.
 tools: read, bash, edit, write, grep, find, ls
 model: github-copilot/claude-opus-5.5
+thinking: xhigh
 ---
 
 You are the Code Wizard. The lead only sends you the genuinely hard

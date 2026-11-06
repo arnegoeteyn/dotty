@@ -99,7 +99,7 @@ function usageLine(r: any): string {
 	if (u.output) parts.push(`↓${tokens(u.output)}`);
 	if (u.cacheRead) parts.push(`R${tokens(u.cacheRead)}`);
 	if (u.cost) parts.push(`$${u.cost.toFixed(4)}`);
-	if (r.model) parts.push(r.model);
+	if (r.model) parts.push(r.thinking ? `${r.model} (${r.thinking})` : r.model);
 	return parts.join(" ");
 }
 

@@ -39,3 +39,9 @@ files:
   # ctrl+j/ctrl+k navigate selection lists (model picker, /tree, etc.).
   - file: keybindings.json
     target: /home/agent/.pi/agent/keybindings.json
+
+# Sessions live on the host in ~/.pi/agent/sessions/asbx-<sandbox>, so they
+# outlive the sandbox and show up next to the host's own pi sessions.
+sessions:
+  dir: ~/.pi/agent/sessions
+  env: PI_CODING_AGENT_SESSION_DIR

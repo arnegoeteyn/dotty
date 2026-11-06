@@ -58,10 +58,11 @@ type mount struct {
 }
 
 type project struct {
-	Name                 string     `yaml:"name"`
-	Workspace            workspace  `yaml:"workspace"`
-	AdditionalWorkspaces []mount    `yaml:"additionalWorkspaces,omitempty"`
-	Lifecycle            *lifecycle `yaml:"lifecycle,omitempty"`
+	Name                 string            `yaml:"name"`
+	Workspace            workspace         `yaml:"workspace"`
+	AdditionalWorkspaces []mount           `yaml:"additionalWorkspaces,omitempty"`
+	Env                  map[string]string `yaml:"env,omitempty"`
+	Lifecycle            *lifecycle        `yaml:"lifecycle,omitempty"`
 }
 
 type lifecycle struct {
@@ -79,6 +80,10 @@ type generatedFiles struct {
 	// writable are host dirs mounted read-write (e.g. learnings).
 	writable []string
 	links    []hostCommand
+	// sessionsDir is the host dir holding per-sandbox session dirs
+	// (asbx-<sandbox>), passed to the agent via the sessionsEnv variable.
+	sessionsDir string
+	sessionsEnv string
 }
 
 func main() {
@@ -205,6 +210,16 @@ func syncAll(here string) error {
 				return fmt.Errorf("harness %s: instructions.target must be absolute", harness)
 			}
 			gen.links = append(gen.links, linkFile("Link instructions", filepath.Join(instrDir, hcfg.Instructions.File), t))
+		}
+		if s := hcfg.Sessions; s != nil {
+			if s.Dir == "" || s.Env == "" {
+				return fmt.Errorf("harness %s: sessions needs dir and env", harness)
+			}
+			dir, err := absPath(s.Dir, "")
+			if err != nil {
+				return err
+			}
+			gen.sessionsDir, gen.sessionsEnv = dir, s.Env
 		}
 		if err := writeFiles(here, harness, hcfg, &gen); err != nil {
 			return err
@@ -396,6 +411,15 @@ func writeProjects(dir, harness string, gen generatedFiles, repos []repo) error 
 		for _, w := range gen.writable {
 			p.AdditionalWorkspaces = append(p.AdditionalWorkspaces, mount{Path: w, ReadOnly: false})
 		}
+		if gen.sessionsDir != "" {
+			// Kept on the host so sessions outlive the sandbox.
+			dir := filepath.Join(gen.sessionsDir, "asbx-"+p.Name)
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				return err
+			}
+			p.AdditionalWorkspaces = append(p.AdditionalWorkspaces, mount{Path: dir, ReadOnly: false})
+			p.Env = map[string]string{gen.sessionsEnv: dir}
+		}
 		if len(gen.links) > 0 {
 			p.Lifecycle = &lifecycle{PostCreate: gen.links}
 		}
@@ -478,6 +502,12 @@ type harnessConfig struct {
 	} `yaml:"dirs"`
 	// Top-level asbx/ dirs mounted read-write, e.g. learnings (agents write there).
 	Writable []string `yaml:"writable"`
+	// Host dir (~ allowed) for session storage; each sandbox gets
+	// <dir>/asbx-<sandbox>, mounted read-write and passed to the agent in env.
+	Sessions *struct {
+		Dir string `yaml:"dir"`
+		Env string `yaml:"env"`
+	} `yaml:"sessions"`
 }
 
 func loadHarness(here, harness string) (harnessConfig, error) {

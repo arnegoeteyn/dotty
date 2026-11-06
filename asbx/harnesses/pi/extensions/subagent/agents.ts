@@ -4,6 +4,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { ThinkingLevel } from "@earendil-works/pi-agent-core";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 
 export type AgentScope = "user" | "project" | "both";
@@ -13,6 +14,7 @@ export interface AgentConfig {
 	description: string;
 	tools?: string[];
 	model?: string;
+	thinking?: ThinkingLevel;
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
@@ -36,6 +38,7 @@ type AgentFrontmatter = {
 	description?: unknown;
 	tools?: unknown;
 	model?: unknown;
+	thinking?: unknown;
 };
 
 /**
@@ -57,6 +60,19 @@ function parseToolList(value: unknown): string[] | undefined {
 		.map((t) => t.trim())
 		.filter(Boolean);
 	return tools.length > 0 ? tools : undefined;
+}
+
+const THINKING_LEVELS: readonly ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
+
+/**
+ * Normalize a frontmatter `thinking` value to a pi thinking level.
+ *
+ * An unknown value yields `undefined` (pi's default for the model) rather than
+ * throwing, for the same reason as `parseToolList`. pi clamps a valid level the
+ * model doesn't support to the nearest one it does.
+ */
+function parseThinkingLevel(value: unknown): ThinkingLevel | undefined {
+	return THINKING_LEVELS.find((level) => level === value);
 }
 
 function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig[] {
@@ -96,6 +112,7 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			description: frontmatter.description,
 			tools: parseToolList(frontmatter.tools),
 			model: typeof frontmatter.model === "string" ? frontmatter.model : undefined,
+			thinking: parseThinkingLevel(frontmatter.thinking),
 			systemPrompt: body,
 			source,
 			filePath,

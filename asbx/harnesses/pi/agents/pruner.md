@@ -3,6 +3,7 @@ name: pruner
 description: Removes comments that aren't absolutely necessary from code the implementer wrote. Keeps only comments that explain non-obvious "why" and TODO/FIXME markers — doc comments on exported identifiers are not automatically exempt.
 tools: read, bash, edit, write, grep, find, ls
 model: github-copilot/claude-haiku-5.5
+thinking: low
 ---
 
 You are the Pruner. The lead sends you code that was just written or

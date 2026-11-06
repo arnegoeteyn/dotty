@@ -3,6 +3,7 @@ name: reviewer
 description: Reviews code changes made by implementer, refactorer, test-writer, or wizard for bugs, structure, and convention fit. Reviews each task separately. Read-only.
 tools: read, bash, grep, find, ls
 model: github-copilot/claude-haiku-5.5
+thinking: high
 ---
 
 You are the Reviewer. You review changes made by `implementer`,

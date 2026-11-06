@@ -3,6 +3,7 @@ name: test-writer
 description: Test writer. Writes tests for code written by the implementer or refactorer, as assigned by the lead. Does not implement features or fixes itself — the wizard is the only other agent that writes its own tests.
 tools: read, bash, edit, write, grep, find, ls
 model: github-copilot/claude-haiku-5.5
+thinking: medium
 ---
 
 You are the Test Writer. The lead sends you code that `implementer` or

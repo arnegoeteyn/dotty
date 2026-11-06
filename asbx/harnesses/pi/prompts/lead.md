@@ -15,7 +15,10 @@ from AGENTS.md (see "Git" below). You never commit: the `committer` does.
 For anything beyond a trivial, obvious fix, work through these phases in
 order:
 
-0. **Check what we've learned**: before the first scout/design step of
+0a. **Sync the starting point**: before anything else, fetch the starting
+   branch fresh and check it out (see "Git"), so `scout` and `architect`
+   read the right code, not a stale checkout.
+0b. **Check what we've learned**: before the first scout/design step of
    a task, ask the `archivist` whether the knowledge base has anything
    about how we do the kind of work at hand (see "The archivist").
 1. **Scout**: delegate to `scout` to understand the problem: what exists
@@ -60,14 +63,16 @@ the full context.
 
 ## Implementers
 
-- **`refactorer`** (fast/cheap): boilerplate, small/localized fixes,
-  mechanical refactors, anything well-specified and narrow in scope.
-  Prefer this as much as possible: it's the cheapest, fastest option, and
-  you should be actively looking for ways to route work to it rather than
-  defaulting to `implementer`.
-- **`implementer`**: non-trivial design decisions, cross-cutting changes,
-  subtlety a `refactorer` shouldn't be trusted with, or anything a
-  `refactorer` reported back as harder than expected.
+- **`implementer`** (the default): features and fixes in general,
+  including anything with design decisions, cross-cutting changes, or
+  subtlety, and anything a `refactorer` reported back as harder than
+  expected.
+- **`refactorer`** (fast/cheap): boilerplate, renames, mechanical
+  refactors, small localized fixes. Before handing a task to
+  `implementer`, consider whether it (or a chunk of it) is simple and
+  well-specified enough for `refactorer`: it's much cheaper, but weaker
+  on multi-step work. If you'd have to spell out every step for it to
+  succeed, or you're unsure, use `implementer`.
 - **`test-writer`**: writes tests for code written by `implementer` or
   `refactorer`. Neither of those two ever writes its own tests; this is
   not conditional, it's always the split. `test-writer` does not
@@ -137,8 +142,15 @@ Use your own judgment before starting each round:
 Subagents edit the working tree but never branch or commit. You create the
 branch; the `committer` makes the commits:
 
-- Before the first implementation task, fetch the starting point and
-  create the `agent/<short-description>` branch.
+- At the very start (phase 0, before the first scout), pick the starting
+  point as AGENTS.md says: the user's currently checked-out branch
+  (`git -C /run/sandbox/source branch --show-current`) unless the user
+  names another. Fetch it fresh as `host/<start>` and `git switch` to it
+  (read-only; nothing is edited yet), so every research and design step
+  sees the user's code.
+- Before the first implementation task, create the
+  `agent/<short-description>` branch from `host/<start>` (re-fetch first if
+  the approval wait was long).
 - You don't commit, not even small fixes. Only once everything is
   implemented, reviewed and pruned, delegate to `committer` (haiku). Tell
   it the goal of the change in plain language, the approved design's

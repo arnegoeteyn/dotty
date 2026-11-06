@@ -24,6 +24,10 @@ the GitHub API.
   - `skills/<name>/SKILL.md`: agent skills, shared by all harnesses. Files are
     Go templates filled from `repos.yaml` (e.g. `{{range .Repos}}`). The
     global `sbx skills` store is turned off for these sandboxes.
+    `interpret-pi-session` (reading session transcripts and `/note`s) is also
+    used by host pi: `~/.pi/agent/skills/interpret-pi-session` is a symlink to
+    it (`ln -sfn "$PWD/shared/skills/interpret-pi-session" ~/.pi/agent/skills/`),
+    so it must stay free of template syntax.
   - `workflow.md`: the agent's rules (branch workflow, sandbox limits).
     Edit this one; it's rendered per harness.
   - `../learnings/` (top level, not under `shared/`): `STYLE_GUIDE.md`
@@ -59,12 +63,18 @@ the GitHub API.
   that runs agents as separate `pi` processes, single, parallel or chained);
   `extensions/subagent-viewer.ts` adds `ctrl+shift+s` (or `/subagents`): an
   overlay listing every subagent run of the session (running ones live),
-  enter opens a run's full conversation.
+  enter opens a run's full conversation. `extensions/note.ts` adds
+  `/note <text>`: saves your verdict on the session (shown in the transcript,
+  never sent to the model) for reviewing the setup later.
   `agents/` (linked to `~/.pi/agent/agents`) holds those agents (scout,
   architect, refactorer, implementer, test-writer, wizard, reviewer, pruner,
   archivist, committer), and `prompts/` (linked to `~/.pi/agent/prompts`) adds
   `/lead <request>` (orchestrate them: scout, design, approval, implement,
   review, prune, then the haiku `committer` commits; it asks the archivist what we've learned) and `/feedback <complaint>`. No LSP yet.
+  `sessions:` in `harness.yaml` keeps pi's sessions on the host in
+  `~/.pi/agent/sessions/asbx-<sandbox>` (e.g. `asbx-pi-dotty`), mounted
+  read-write and set via `PI_CODING_AGENT_SESSION_DIR`, so they outlive
+  `./asbx rm`.
 - `scripts/lockdown.sh`: network deny rules (push, SSH, API writes), run once
   per new sandbox.
 - `projects/`, `generated/`: written by `./asbx sync`, gitignored.
@@ -103,13 +113,13 @@ After editing:
 | `workflow.md`, `lsp.yaml`, skills, git hooks, agent hook files, `dirs:` contents | `./asbx sync`; applies to the next agent session |
 | `learnings/` | nothing; the sandbox sees the change live |
 | `env` in a sbxenv file | `./asbx sync`; applies on the next `./asbx run` |
-| `../repos.yaml`, kits, other sbxenv settings, adding `hooks:` or `dirs:` entries to a harness | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
+| `../repos.yaml`, kits, other sbxenv settings, adding `hooks:`, `dirs:` or `sessions:` entries to a harness | `./asbx sync`, then recreate (`./asbx rm <repo>`, `./asbx run <repo>`) |
 | `main.go` | `just build` |
 
 ## Branch workflow
 
-- "Implement X": the agent fetches your `main` (or a branch you name, or
-  "my current branch") as `host/<branch>`, creates `agent/<description>` from
+- "Implement X": the agent fetches your currently checked-out branch (or a
+  branch you name) as `host/<branch>`, creates `agent/<description>` from
   it and commits there.
 - "Look at my current branch" / "review nova-1092": the agent fetches it as
   `host/<branch>` and reviews it against `host/main` without committing.

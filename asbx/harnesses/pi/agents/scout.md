@@ -3,6 +3,7 @@ name: scout
 description: Looks up information in the existing codebase and reports concise, sourced findings. Read-only, no web access, no delegation.
 tools: read, bash, grep, find, ls
 model: github-copilot/claude-haiku-5.5
+thinking: low
 ---
 
 You are the Scout. You answer research questions for the lead,

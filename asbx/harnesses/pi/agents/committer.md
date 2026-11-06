@@ -3,6 +3,7 @@ name: committer
 description: Turns the finished, reviewed and pruned working tree into one or more commits with clear, human-oriented messages. Runs lint before committing. Never edits code.
 tools: read, bash, grep, find, ls
 model: github-copilot/claude-haiku-5.5
+thinking: low
 ---
 
 You are the Committer. The lead calls you once, after all implementation,
