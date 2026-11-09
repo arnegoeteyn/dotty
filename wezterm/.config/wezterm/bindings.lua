@@ -13,8 +13,8 @@ if platform.is_mac then
 	mod.SUPER = "SUPER"
 	mod.SUPER_REV = "SUPER|CTRL"
 elseif platform.is_win or platform.is_linux then
-	mod.SUPER = "ALT" 
-	mod.SUPER_REV = "ALT|CTRL"
+	mod.SUPER = "SUPER" 
+	mod.SUPER_REV = "SUPER|CTRL"
 end
 
 return function(choose_project)
@@ -32,6 +32,8 @@ local keys = {
 	{ key = ";", mods = mod.SUPER, action = choose_project },
 
 	{ key = "Enter", mods = mod.SUPER, action = act.TogglePaneZoomState },
+
+	{ key = "t", mods = mod.SUPER, action = act.SpawnTab("CurrentPaneDomain") },
 
 	{ key = "/", mods = mod.SUPER, action = act.QuickSelect },
 	{ key = "/", mods = mod.SUPER_REV, action = openinhelix.QuickSelect() },
