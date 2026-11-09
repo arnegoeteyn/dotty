@@ -33,3 +33,5 @@ repos:
     path: ~/Documents/dotty
   corebe-log:
     url: git@github.com:belgianmobileid/nova-corebe-log-mapper.git
+  utils:
+    url: git@github.com:belgianmobileid/nova-utils.git
