@@ -24,6 +24,10 @@ local keys = {
 	{ key = "9", mods = mod.SUPER, action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 	{ key = "n", mods = mod.SUPER, action = act.SwitchWorkspaceRelative(1) },
 	{ key = "p", mods = mod.SUPER, action = act.SwitchWorkspaceRelative(-1) },
+	{ key = "p", mods = "CTRL|SHIFT", action = act.ActivateCommandPalette },
+	{ key = "c", mods = "CTRL|SHIFT", action = act.CopyTo("Clipboard") },
+	{ key = "v", mods = "CTRL|SHIFT", action = act.PasteFrom("Clipboard") },
+	{ key = "x", mods = "CTRL|SHIFT", action = act.ActivateCopyMode },
 
 	{ key = ";", mods = mod.SUPER, action = choose_project },
 
