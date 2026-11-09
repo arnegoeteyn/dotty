@@ -19,3 +19,8 @@ learnings-decrypt:
     #!/usr/bin/env -S op run -- bash -eo pipefail
     cd learnings
     {{gpg}} --decrypt {{archive}} 3<<<"$GPG_PASSPHRASE" | tar -xzf -
+
+# Aliases so the root justfile can call `just encrypt` / `decrypt` here.
+encrypt: learnings-encrypt
+
+decrypt: learnings-decrypt
