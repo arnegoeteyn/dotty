@@ -1,9 +1,7 @@
 local wezterm = require("wezterm")
-local act = wezterm.action
 local projects = require("projects")
 local appearance = require("appearance")
 local killworkspace = require("workspace-kill")
-local openinhelix = require("open-helix")
 
 local config = wezterm.config_builder()
 
@@ -30,28 +28,9 @@ config.inactive_pane_hsb = {
 	brightness = 0.4,
 }
 
-config.keys = {
-	{ key = "9", mods = "CMD", action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
-	{ key = "n", mods = "CMD", action = act.SwitchWorkspaceRelative(1) },
-	{ key = "p", mods = "CMD", action = act.SwitchWorkspaceRelative(-1) },
-
-	{ key = ";", mods = "CMD", action = projects.choose_project() },
-
-	{ key = "Enter", mods = "CMD", action = act.TogglePaneZoomState },
-
-	{ key = "/", mods = "CMD", action = act.QuickSelect},
-	{ key = "/", mods = "ALT|CMD", action = openinhelix.QuickSelect()},
-
-	{ key = 'Enter', mods = 'ALT', action = wezterm.action.DisableDefaultAssignment },
-
-	{ key = "d", mods = "CMD", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) },
-	{ key = "d", mods = "SHIFT|CMD", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) },
-	{ key = "h", mods = "CMD", action = act.ActivatePaneDirection("Left") },
-	{ key = "l", mods = "CMD", action = act.ActivatePaneDirection("Right") },
-	{ key = "j", mods = "CMD", action = act.ActivatePaneDirection("Down") },
-	{ key = "k", mods = "CMD", action = act.ActivatePaneDirection("Up") },
-
-}
+-- Wezterm's built-in defaults are off; all bindings live in bindings.lua.
+config.disable_default_key_bindings = true
+config.keys = require("bindings")(projects.choose_project())
 
 wezterm.on('augment-command-palette', function(window, pane)
   return {
