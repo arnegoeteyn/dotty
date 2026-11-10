@@ -1,8 +1,10 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
 learnings := "asbx/learnings"
 archive := "asbx/learnings.tar"
 
 unlock:
-    git-crypt unlock <(op document get dotty-git-crypt --vault itsme)
+    git-crypt unlock <(op document get dotty-git-crypt --vault private)
     just learnings-unpack
 
 setup-hooks:
