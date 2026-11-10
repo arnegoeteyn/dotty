@@ -4,29 +4,80 @@ local module = {}
 local mux = wezterm.mux
 local killworkspace = require("workspace-kill")
 
-local function repos_file()
+local function dotty_dir()
 	local ok, stdout = wezterm.run_child_process({ "realpath", wezterm.config_file })
 	if not ok then
 		return nil
 	end
-	-- <dotty>/wezterm/.config/wezterm/wezterm.lua -> <dotty>/repos.yaml
-	local dotty = stdout:gsub("%s+$", ""):match("^(.*)/[^/]+/[^/]+/[^/]+/[^/]+$")
-	return dotty and (dotty .. "/repos.yaml")
+	-- <dotty>/wezterm/.config/wezterm/wezterm.lua -> <dotty>
+	return stdout:gsub("%s+$", ""):match("^(.*)/[^/]+/[^/]+/[^/]+/[^/]+$")
+end
+
+-- Reads the gitignored .machine file next to repos.yaml (same as asbx).
+-- Without it, repos with enabledOn are skipped and disabledOn never matches.
+local function machine_name(dotty)
+	local file = dotty .. "/.machine"
+	local f = io.open(file, "r")
+	if not f then
+		return ""
+	end
+	wezterm.add_to_config_reload_watch_list(file)
+	local name = f:read("*a"):gsub("^%s+", ""):gsub("%s+$", "")
+	f:close()
+	return name
+end
+
+local function contains(list, value)
+	for _, v in ipairs(list or {}) do
+		if v == value then
+			return true
+		end
+	end
+	return false
+end
+
+-- Mirrors asbx repoSpec.activeOn.
+local function active_on(repo, machine)
+	if repo.enabledOn and #repo.enabledOn > 0 then
+		return contains(repo.enabledOn, machine)
+	end
+	return not contains(repo.disabledOn, machine)
+end
+
+local function unquote(s)
+	return (s:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1"))
+end
+
+-- Parses a flow list like "[a, b]".
+local function parse_flow_list(value)
+	local list = {}
+	for item in value:sub(2, -2):gmatch("[^,]+") do
+		item = unquote(item:gsub("^%s+", ""):gsub("%s+$", ""))
+		if item ~= "" then
+			table.insert(list, item)
+		end
+	end
+	return list
 end
 
 local function expand_home(path)
 	return (path:gsub("^~", wezterm.home_dir))
 end
 
--- Minimal parser for repos.yaml (root + repos.<name>.{url,path});
--- this wezterm build has no wezterm.serde.
+-- Minimal parser for repos.yaml (root + repos.<name>.{url,path,layout,
+-- enabledOn,disabledOn}); lists may be flow ([a, b]) or block (- a).
+-- This wezterm build has no wezterm.serde.
 local function parse_repos(content)
-	local cfg, current = { repos = {} }, nil
+	local cfg, current, list_key = { repos = {} }, nil, nil
 	for line in content:gmatch("[^\n]+") do
-		line = line:gsub("%s+#.*$", ""):gsub("^#.*$", "")
+		line = line:gsub("%s+#.*$", ""):gsub("^%s*#.*$", "")
+		local item = line:match("^%s*%-%s*(.-)%s*$")
 		local indent, key, value = line:match("^(%s*)([%w_%-]+):%s*(.-)%s*$")
-		if key then
-			value = value:gsub('^"(.*)"$', "%1"):gsub("^'(.*)'$", "%1")
+		if item and current and list_key then
+			table.insert(current[list_key], unquote(item))
+		elseif key then
+			list_key = nil
+			value = unquote(value)
 			if #indent == 0 then
 				current = nil
 				if key == "root" then
@@ -35,7 +86,12 @@ local function parse_repos(content)
 			elseif #indent == 2 then
 				current = {}
 				cfg.repos[key] = current
-			elseif current and value ~= "" then
+			elseif current and value:match("^%[.*%]$") then
+				current[key] = parse_flow_list(value)
+			elseif current and value == "" then
+				current[key] = {}
+				list_key = key
+			elseif current then
 				current[key] = value
 			end
 		end
@@ -44,7 +100,8 @@ local function parse_repos(content)
 end
 
 local function projects()
-	local file = repos_file()
+	local dotty = dotty_dir()
+	local file = dotty and (dotty .. "/repos.yaml")
 	local f = file and io.open(file, "r")
 	if not f then
 		wezterm.log_error("projects: cannot open repos.yaml (" .. tostring(file) .. ")")
@@ -56,12 +113,15 @@ local function projects()
 	f:close()
 
 	local cfg = parse_repos(content)
+	local machine = machine_name(dotty)
 
-	local root = expand_home(cfg.root or "")
+	local root = expand_home(cfg.root or "~/Code")
 	local list = {}
 	for name, repo in pairs(cfg.repos or {}) do
-		local path = repo.path and expand_home(repo.path) or (root .. "/" .. name)
-		table.insert(list, { name = name, path = path, layout = repo.layout })
+		if active_on(repo, machine) then
+			local path = repo.path and expand_home(repo.path) or (root .. "/" .. name)
+			table.insert(list, { name = name, path = path, layout = repo.layout })
+		end
 	end
 	table.sort(list, function(a, b)
 		return a.name < b.name
