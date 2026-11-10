@@ -1,0 +1,16 @@
+schemaVersion: "2"
+kind: mixin
+name: typst
+description: typst compiler (for the typst-author and touying-author skills)
+
+args:
+  typst:
+    default: "0.15.1"
+    description: typst version to install
+
+setup:
+  install:
+    - description: Install typst
+      command: >-
+        curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 "https://github.com/typst/typst/releases/download/v${{ kit.args.typst }}/typst-$(uname -m)-unknown-linux-musl.tar.xz"
+        | tar -xJ -C /usr/local/bin --strip-components=1 --wildcards '*/typst'

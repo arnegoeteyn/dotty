@@ -774,6 +774,13 @@ func renderTree(src, dst string, data any) error {
 		if d.IsDir() {
 			return os.MkdirAll(out, 0o755)
 		}
+		if isVerbatim(rel) {
+			raw, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(out, raw, 0o644)
+		}
 		raw, err := os.ReadFile(path)
 		if err != nil {
 			return err
@@ -807,6 +814,17 @@ func renderTree(src, dst string, data any) error {
 		}
 	}
 	return nil
+}
+
+// isVerbatim reports whether a file is copied as-is instead of rendered:
+// anything under a docs/ directory (vendored docs full of literal `{{`).
+func isVerbatim(rel string) bool {
+	for _, part := range strings.Split(filepath.ToSlash(filepath.Dir(rel)), "/") {
+		if part == "docs" {
+			return true
+		}
+	}
+	return false
 }
 
 // reposFile lives in the dotty root so other tools (wezterm) can share it.

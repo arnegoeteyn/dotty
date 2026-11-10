@@ -14,6 +14,7 @@ the GitHub API.
   Missing ones are cloned by `./asbx sync`.
 - `shared/`: used by every harness, mounted read-only into every sandbox.
   - `base.sbxenv.yaml`: memory, `github` secret, kits, lockdown, git hook setup.
+  - `kits/typst/`: installs the `typst` compiler (used by the typst skills).
   - `kits/go/`: installs `gopls`, `golangci-lint` and `just`, sets up private
     module access and native-arch testcontainers (Go itself is in the image).
   - `scripts/notify.sh`: agent hook that shows a macOS notification via OSC 9
