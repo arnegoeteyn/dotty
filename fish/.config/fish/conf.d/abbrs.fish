@@ -5,6 +5,7 @@ abbr -a -- lla 'lsd -la'
 abbr -a -- lt 'lsd --tree'
 abbr -a -- vim nvim
 abbr -a -- h 'hx .'
+abbr -a -- m 'ms .'
 abbr -a -- y yazi
 abbr -a -- stow 'stow -v -d $HOME/Documents/dotty -t $HOME'
 abbr -a -- t 'go test -tags=test -fullpath'
