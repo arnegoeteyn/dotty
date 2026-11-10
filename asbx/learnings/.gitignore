@@ -1,4 +1,0 @@
-# Only the encrypted archive is committed; plaintext stays local.
-*
-!.gitignore
-!learnings.tar.gz.gpg

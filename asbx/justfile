@@ -1,26 +1,2 @@
 build:
     go build -o asbx .
-
-# Resolved by `op run` inside the learnings recipes.
-export GPG_PASSPHRASE := "op://itsme/clanker-learnings/password"
-
-gpg := "gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3"
-archive := "learnings.tar.gz.gpg"
-
-# Encrypt everything in learnings/ into one gpg archive (plaintext is kept, but gitignored).
-learnings-encrypt:
-    #!/usr/bin/env -S op run -- bash -eo pipefail
-    cd learnings
-    tar -czf - --exclude=./.gitignore --exclude=./{{archive}} . \
-        | {{gpg}} --symmetric --cipher-algo AES256 -o {{archive}} 3<<<"$GPG_PASSPHRASE"
-
-# Restore learnings/ from the gpg archive.
-learnings-decrypt:
-    #!/usr/bin/env -S op run -- bash -eo pipefail
-    cd learnings
-    {{gpg}} --decrypt {{archive}} 3<<<"$GPG_PASSPHRASE" | tar -xzf -
-
-# Aliases so the root justfile can call `just encrypt` / `decrypt` here.
-encrypt: learnings-encrypt
-
-decrypt: learnings-decrypt

@@ -1,0 +1,3 @@
+repos.yaml          filter=git-crypt diff=git-crypt
+asbx/learnings/**   filter=git-crypt diff=git-crypt
+.gitattributes      !filter !diff

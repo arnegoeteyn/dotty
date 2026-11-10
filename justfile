@@ -1,21 +1,10 @@
-# Same key as asbx/justfile; resolved by `op run`.
-export GPG_PASSPHRASE := "op://itsme/clanker-learnings/password"
+unlock: setup-hooks
+    git-crypt unlock <(op document get dotty-git-crypt --vault private)
 
-gpg := "gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3"
-repos := "repos.yaml"
-
-# Encrypt repos.yaml and everything encrypted in asbx.
-encrypt: repos-encrypt
-    cd asbx && just encrypt
-
-# Decrypt repos.yaml and everything encrypted in asbx.
-decrypt: repos-decrypt
-    cd asbx && just decrypt
-
-repos-encrypt:
-    #!/usr/bin/env -S op run -- bash -eo pipefail
-    {{gpg}} --symmetric --cipher-algo AES256 -o {{repos}}.gpg {{repos}} 3<<<"$GPG_PASSPHRASE"
-
-repos-decrypt:
-    #!/usr/bin/env -S op run -- bash -eo pipefail
-    {{gpg}} --decrypt -o {{repos}} {{repos}}.gpg 3<<<"$GPG_PASSPHRASE"
+# Pre-commit hook: refuse to commit if a file that should be encrypted isn't.
+setup-hooks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    hook="$(git rev-parse --git-path hooks)/pre-commit"
+    printf '#!/bin/sh\ngit-crypt status -e >/dev/null 2>&1 || { git-crypt status -e; echo "git-crypt: unencrypted file(s) staged, aborting" >&2; exit 1; }\n' > "$hook"
+    chmod +x "$hook"
