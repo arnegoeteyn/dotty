@@ -191,13 +191,13 @@ local function local_agent_workspace(cwd, label)
 
 	local _, test_pane = window:spawn_tab({ cwd = cwd })
 
-	local opencode_pane = test_pane:split({
+	local agent_pane = test_pane:split({
 		direction = "Right",
 		size = 0.5,
 		cwd = cwd,
 	})
 
-	opencode_pane:send_text("opencode\n")
+	agent_pane:send_text("pi\n")
 
 	helix_pane:activate({})
 end
