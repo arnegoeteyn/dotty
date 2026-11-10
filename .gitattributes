@@ -1,3 +1,4 @@
+# Encrypted with git-crypt (key: 1Password itsme/dotty-git-crypt). See README.
 repos.yaml          filter=git-crypt diff=git-crypt
-asbx/learnings/**   filter=git-crypt diff=git-crypt
+asbx/learnings.tar  filter=git-crypt diff=git-crypt
 .gitattributes      !filter !diff
