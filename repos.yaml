@@ -35,3 +35,6 @@ repos:
     url: git@github.com:belgianmobileid/nova-corebe-log-mapper.git
   utils:
     url: git@github.com:belgianmobileid/nova-utils.git
+  presentations:
+    url: git@github.com:arnegoeteyn-itsme/itsme-presentations.git
+    path: ~/Documents/itsme-presentations
