@@ -9,6 +9,9 @@ config.initial_cols = 120
 config.initial_rows = 28
 config.font_size = 18
 
+-- Use fish as the default shell (new panes, tabs and windows).
+config.default_prog = { "/usr/bin/fish", "-l" }
+
 if appearance.is_dark() then
 	config.color_scheme = "kanagawabones"
 else
