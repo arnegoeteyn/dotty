@@ -1,0 +1,24 @@
+[[language]]
+name = "typescript"
+formatter = {command = "prettierd", arsgs = ["--parser", "typescript"]}
+auto-format = true
+
+[[language]]
+name = "yaml"
+file-types = ["yaml", "yml"]
+formatter = {command = "prettier", args = ["--parser", "yaml"]}
+auto-format = true
+
+[language-server.gopls]
+command = "gopls"
+
+[language-server.gopls.config]
+"build.buildFlags" = ["-tags=test"]
+
+[language-server.golangci-lint-lsp.config]
+command = ["golangci-lint", "run", "--output.json.path=stdout", "--show-stats=false", "--issues-exit-code=1", "--fast-only"]
+
+
+[[language]]
+name = "lua"
+formatter = { command = "stylua", args = [ "-" ] }
