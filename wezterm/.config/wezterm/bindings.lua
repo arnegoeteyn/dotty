@@ -25,6 +25,7 @@ return function(choose_project)
 
 		{ key = "9", mods = mod.SUPER, action = act.ShowLauncherArgs({ flags = "FUZZY|WORKSPACES" }) },
 		{ key = "n", mods = mod.SUPER, action = act.SwitchWorkspaceRelative(1) },
+		{ key = "p", mods = mod.SUPER, action = act.SwitchWorkspaceRelative(-1) },
 		{ key = "p", mods = "CTRL|SHIFT", action = act.ActivateCommandPalette },
 		{ key = "c", mods = mod.COPY, action = act.CopyTo("Clipboard") },
 		{ key = "v", mods = mod.COPY, action = act.PasteFrom("Clipboard") },
