@@ -152,7 +152,7 @@ local function dev_workspace(cwd, label)
 		cwd = cwd,
 	})
 
-	helix_pane:send_text("hx .\n")
+	helix_pane:send_text("ms .\n")
 	lazygit_pane:send_text("lazygit\n")
 
 	local _, test_pane = window:spawn_tab({ cwd = cwd })
@@ -186,7 +186,7 @@ local function local_agent_workspace(cwd, label)
 		cwd = cwd,
 	})
 
-	helix_pane:send_text("hx .\n")
+	helix_pane:send_text("ms .\n")
 	lazygit_pane:send_text("lazygit\n")
 
 	local _, test_pane = window:spawn_tab({ cwd = cwd })
@@ -220,7 +220,7 @@ local function worktree_workspace(cwd, label)
 		cwd = cwd .. "/main",
 	})
 
-	helix_pane:send_text("hx main\n")
+	helix_pane:send_text("ms main\n")
 	lazygit_pane:send_text("lazygit -p main\n")
 
 	local _, test_pane = window:spawn_tab({ cwd = cwd .. "/main" })
